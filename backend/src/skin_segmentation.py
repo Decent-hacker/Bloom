@@ -100,6 +100,22 @@ def _skin_colour_mask(image: np.ndarray) -> np.ndarray:
     return cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
 
 
+def estimate_yaw(landmarks: list[tuple[float, float]]) -> float:
+    """Estimate a relative left/right head turn from stable FaceMesh points.
+
+    The score is the nose-tip displacement from the midpoint of the outer eye
+    corners, normalised by half the eye distance.  It is intentionally used as
+    a capture-framing gate, not as a clinical or biometric measurement.
+    """
+    left_eye_x = landmarks[33][0]
+    right_eye_x = landmarks[263][0]
+    nose_x = landmarks[1][0]
+    half_eye_distance = abs(right_eye_x - left_eye_x) / 2.0
+    if half_eye_distance < 1e-6:
+        return 0.0
+    return round((nose_x - ((left_eye_x + right_eye_x) / 2.0)) / half_eye_distance, 3)
+
+
 def get_face_mask(image: np.ndarray) -> np.ndarray:
     """Returns the face-oval mask, raising FaceLandmarkError when no face is found."""
     landmarks = _run_face_mesh(image)

@@ -64,6 +64,37 @@ def test_success_contract(monkeypatch):
     assert "count" not in body["concerns"]["redness"]
 
 
+def test_multi_angle_contract_uses_all_required_views(monkeypatch):
+    monkeypatch.setattr(main.pipeline, "run", lambda content: _fake_success())
+    files = [
+        ("files", ("front.png", _png(), "image/png")),
+        ("files", ("left.png", _png(), "image/png")),
+        ("files", ("right.png", _png(), "image/png")),
+    ]
+    response = client.post(
+        "/api/analyse/multi",
+        files=files,
+        data={"angles": ["front", "left", "right"]},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "success"
+    assert body["scan_type"] == "multi_angle"
+    assert body["angles_analyzed"] == ["front", "left", "right"]
+    assert [item["angle"] for item in body["angle_results"]] == ["front", "left", "right"]
+
+
+def test_multi_angle_requires_front_left_and_right():
+    response = client.post(
+        "/api/analyse/multi",
+        files=[("files", ("front.png", _png(), "image/png"))],
+        data={"angles": "front"},
+    )
+    assert response.status_code == 422
+    assert response.json()["status"] == "invalid_request"
+
+
 def test_quality_error_contract(monkeypatch):
     monkeypatch.setattr(main.pipeline, "run", lambda content: {
         "quality": {"passed": False, "issues": ["Too dark"], "reason_codes": ["too_dark"]},

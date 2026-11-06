@@ -8,7 +8,7 @@ const SEVERITY_COLOURS = {
 const CONCERN_DOT = {
   Acne: "text-blue-500",
   Redness: "text-red-500",
-  Blemishes: "text-yellow-500",
+  "Dark spots": "text-yellow-500",
 };
 
 /** One concern card: name, severity pill, count/area, relative extent. */
@@ -19,7 +19,7 @@ function ConcernCard({ name, concern, compact }) {
   if (compact) {
     return (
       <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-slate-50 border border-surface-border">
-        <span className={CONCERN_DOT[name]} aria-hidden="true">●</span>
+        <span className={`concern-dot ${CONCERN_DOT[name]}`} aria-hidden="true" />
         <span className="text-sm font-medium text-slate-700 w-20 truncate">{name}</span>
         <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${SEVERITY_COLOURS[concern.severity]}`}>
           {concern.severity}
@@ -32,10 +32,10 @@ function ConcernCard({ name, concern, compact }) {
   }
 
   return (
-    <div className="rounded-lg border border-surface-border p-4">
+    <div className="rounded-xl border border-surface-border bg-slate-50/60 p-4">
       <div className="flex items-center justify-between">
         <span className="flex items-center gap-2 font-medium text-slate-700">
-          <span className={CONCERN_DOT[name]} aria-hidden="true">●</span>
+          <span className={`concern-dot ${CONCERN_DOT[name]}`} aria-hidden="true" />
           {name}
         </span>
         <span className={`rounded-full px-3 py-1 text-sm font-medium ${SEVERITY_COLOURS[concern.severity]}`}>
@@ -53,7 +53,7 @@ function ConcernCard({ name, concern, compact }) {
 }
 
 /**
- * Severity pills for acne, redness and blemishes.
+ * Severity pills for acne-like patterns, redness and dark spots.
  * @param {object} concerns - { acne, redness, blemishes }
  * @param {boolean} compact - compact inline style for history
  */
@@ -61,7 +61,7 @@ function ConcernBadges({ concerns, compact }) {
   const items = [
     { name: "Acne", concern: concerns.acne },
     { name: "Redness", concern: concerns.redness },
-    { name: "Blemishes", concern: concerns.blemishes },
+    { name: "Dark spots", concern: concerns.blemishes },
   ];
 
   if (compact) {
@@ -76,7 +76,10 @@ function ConcernBadges({ concerns, compact }) {
 
   return (
     <section className="rounded-xl border border-surface-border bg-white p-6">
-      <h2 className="mb-4 text-lg font-semibold text-slate-800">Detected Concerns</h2>
+      <div className="mb-4 flex items-baseline justify-between gap-4">
+        <h2 className="text-lg font-semibold text-slate-800">Visual summary</h2>
+        <p className="text-xs text-slate-400">Area is relative to the analysed skin region</p>
+      </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         {items.map((item) => (
           <ConcernCard key={item.name} {...item} />

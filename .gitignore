@@ -7,6 +7,9 @@ venv/
 .pytest_cache/
 .ruff_cache/
 .coverage
+*.egg-info/
+backend/data/
+backend/.pytest-run/
 
 # Generated evaluation / experiment artifacts
 backend/evaluation/images/*

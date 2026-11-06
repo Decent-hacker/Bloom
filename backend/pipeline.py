@@ -49,7 +49,9 @@ def run_stages(image_bytes: bytes) -> dict:
     concerns = postprocessing.run(raw, segmentation)
 
     # Naive baseline masks are for offline comparison/visualisation only.
-    baseline_masks = lesion_detection.naive_concern_masks(frequency, segmentation["skin_mask"])
+    # Keep the baseline's thresholds intentionally simple, but never allow it
+    # to mark protected facial features (eyes, lips, brows, or nose).
+    baseline_masks = lesion_detection.naive_concern_masks(frequency, segmentation["analysis_zone"])
     baseline_mask = _combine(baseline_masks)
     improved_mask = _combine({name: c["mask"] for name, c in concerns.items()})
 
@@ -87,6 +89,7 @@ def run(image_bytes: bytes) -> dict:
         stages["segmentation"]["skin_mask"],
         stages["concerns"],
         stages["baseline_mask"],
+        stages["frequency"],
     )
     return {
         "quality": stages["quality"],

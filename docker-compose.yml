@@ -1,0 +1,36 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    environment:
+      ALLOWED_ORIGINS: http://localhost:8080
+      MAX_IMAGE_SIZE_MB: "10"
+      LOG_LEVEL: INFO
+      BLOOM_DB_PATH: /app/data/bloom.db
+      # Set AUTH_SECRET in a local .env before internet deployment so active
+      # sessions remain valid across a restart. Never commit that value.
+      AUTH_SECRET: ${AUTH_SECRET:-}
+    volumes:
+      - bloom_data:/app/data
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health', timeout=5)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: ""
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+
+volumes:
+  bloom_data:

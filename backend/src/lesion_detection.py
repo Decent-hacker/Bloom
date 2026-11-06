@@ -80,11 +80,12 @@ def _acne_mask(dog: np.ndarray, zone: np.ndarray) -> np.ndarray:
     return _separate_touching(mask)
 
 
-def naive_concern_masks(frequency: dict, skin_mask: np.ndarray) -> dict:
+def naive_concern_masks(frequency: dict, analysis_zone: np.ndarray) -> dict:
     """Returns per-concern masks for the fixed-threshold baseline.
 
-    No adaptive thresholds, no eye/lip exclusion, no watershed. Used only in the
-    offline evaluation workflow against independent ground truth.
+    No adaptive thresholds or watershed. The supplied analysis zone still
+    excludes eyes, lips, brows, and nose so the baseline cannot label them as
+    visual concerns.
     """
     lab = frequency["lab"]
     lum, a = lab[:, :, 0], lab[:, :, 1]
@@ -92,19 +93,19 @@ def naive_concern_masks(frequency: dict, skin_mask: np.ndarray) -> dict:
     dark = np.where(lum < NAIVE_BLEMISH_L_THRESHOLD, 255, 0).astype(np.uint8)
     acne = np.where(np.abs(frequency["dog"]) >= NAIVE_ACNE_DOG_ABS_THRESHOLD, 255, 0).astype(np.uint8)
     return {
-        "acne": _restrict(acne, skin_mask),
-        "redness": _restrict(red, skin_mask),
-        "blemish": _restrict(dark, skin_mask),
+        "acne": _restrict(acne, analysis_zone),
+        "redness": _restrict(red, analysis_zone),
+        "blemish": _restrict(dark, analysis_zone),
     }
 
 
-def naive_combined_mask(image: np.ndarray, skin_mask: np.ndarray) -> np.ndarray:
+def naive_combined_mask(image: np.ndarray, analysis_zone: np.ndarray) -> np.ndarray:
     """Returns union of the naive per-concern masks (visual baseline only)."""
     from src import frequency_decomposition
 
     frequency = frequency_decomposition.run(image)
-    masks = naive_concern_masks(frequency, skin_mask)
-    out = np.zeros_like(skin_mask)
+    masks = naive_concern_masks(frequency, analysis_zone)
+    out = np.zeros_like(analysis_zone)
     for mask in masks.values():
         out = cv2.bitwise_or(out, mask)
     return out

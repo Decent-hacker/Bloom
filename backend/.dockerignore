@@ -1,0 +1,12 @@
+.venv/
+.pytest_cache/
+.pytest-run*/
+.ruff_cache/
+__pycache__/
+*.py[cod]
+.env
+tests/
+evaluation/
+experiments/output/
+ml/
+*.pt

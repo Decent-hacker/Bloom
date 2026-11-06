@@ -1,61 +1,17 @@
 import ConcernBadges from "./ConcernBadges.jsx";
+import Icon from "./Icon.jsx";
 
-/**
- * ProgressTrend — shows recent scan history from localStorage.
- * Simplified version: list of last 5 scans with severity badges.
- */
-function ProgressTrend({ history }) {
-  if (!history || history.length === 0) {
-    return (
-      <div className="mt-8 p-6 rounded-xl bg-slate-50 border border-surface-border text-center">
-        <p className="text-slate-500">No previous scans yet.</p>
-        <p className="text-xs text-slate-400 mt-1">Your scan history will appear here (stored locally in this browser).</p>
-      </div>
-    );
-  }
-
-  const formatDate = (iso) => {
-    const d = new Date(iso);
-    return d.toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
-  };
-
-  const getSeverityColor = (severity) => {
-    switch (severity) {
-      case "Clear": return "bg-green-100 text-green-700";
-      case "Mild": return "bg-yellow-100 text-yellow-700";
-      case "Moderate": return "bg-orange-100 text-orange-700";
-      case "Severe": return "bg-red-100 text-red-700";
-      default: return "bg-slate-100 text-slate-700";
-    }
-  };
-
-  return (
-    <div className="mt-8" aria-live="polite">
-      <h3 className="text-xl font-semibold text-slate-800 mb-4">Progress History</h3>
-      <div className="space-y-3">
-        {history.slice(0, 5).map((scan, idx) => (
-          <div key={idx} className="p-4 rounded-xl bg-white border border-surface-border hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium text-slate-600">{formatDate(scan.date)}</span>
-              <span className="text-xs text-slate-400">Scan #{idx + 1}</span>
-            </div>
-            <ConcernBadges concerns={scan.concerns} compact />
-            {scan.images?.improved_annotated && (
-              <div className="mt-3">
-                <img
-                  src={`data:image/jpeg;base64,${scan.images.improved_annotated}`}
-                  alt="Previous scan result"
-                  className="w-full max-h-40 object-cover rounded-lg border border-surface-border"
-                  loading="lazy"
-                />
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-      <p className="mt-3 text-xs text-slate-400 text-center">History stored locally in this browser. Clears on cache clear.</p>
-    </div>
-  );
+function ProgressTrend({ history, onDelete }) {
+  const formatDate = (value) => new Date(`${value}Z`).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  return <section className="history-panel" aria-live="polite">
+    <div className="section-heading"><div><p className="eyebrow">Your account</p><h2>Past reviews</h2></div><span>{history.length} saved</span></div>
+    {history.length === 0 ? <div className="history-empty"><strong>No past reviews</strong><p>Your completed reviews will appear here. Original photos are never saved.</p></div> : <div className="history-list">
+      {history.map((scan) => <article className="history-record" key={scan.id}>
+        <div className="record-top"><div><strong>{scan.scan_type === "multi_angle" ? "Guided scan" : "Single photo review"}</strong><span>{formatDate(scan.created_at)}</span></div><button type="button" className="icon-button" title="Delete this record" onClick={() => onDelete(scan.id)}><Icon name="trash" size={17} /></button></div>
+        <ConcernBadges concerns={scan.concerns} compact />
+      </article>)}
+    </div>}
+  </section>;
 }
 
 export default ProgressTrend;

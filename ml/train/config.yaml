@@ -1,0 +1,24 @@
+# Bloom acne MVP training config.
+# Scope is deliberately one class: lesion-level acne.  Do not add dark spots,
+# pigmentation, scars, or redness until those classes have reviewed spatial
+# annotations rather than image-level folder labels.
+
+model: yolov8n.pt          # small enough for CPU inference and a focused MVP
+data: ml/data/acne_mvp/classes.yaml
+epochs: 50
+patience: 25               # early stopping
+batch: 16                  # reduce to 8 if OOM on T4
+imgsz: 640
+optimizer: AdamW
+lr0: 0.001
+lrf: 0.01                  # final lr = lr0 * lrf (cosine decay)
+seed: 42
+workers: 4
+
+# YOLO built-in augmentation
+mosaic: 0.0                # OFF — mosaic hurts small lesion detection; ablate if time
+mixup: 0.0
+
+# The base run is intentionally clean.  Lighting/degradation augmentation can
+# be reintroduced only after a held-out baseline is recorded.
+augmentation_mode: none

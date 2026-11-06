@@ -1,0 +1,1 @@
+One-paragraph note: this folder holds Mohit's own collected Indian skin dataset. Images are gitignored for privacy. To add to harmonized dataset, run `python ml/datasets/harmonize.py --include-own`.

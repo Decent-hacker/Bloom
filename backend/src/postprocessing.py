@@ -22,11 +22,13 @@ def _severity(concern: str, area_px: int, area_pct: float) -> str:
     if area_px == 0:
         return "Clear"
     band = SEVERITY[concern]
-    if area_pct >= band["Moderate"]:
+    if area_pct >= band["Severe"]:
         return "Severe"
-    if area_pct >= band["Mild"]:
+    if area_pct >= band["Moderate"]:
         return "Moderate"
-    return "Mild"
+    if area_pct >= band["Mild"]:
+        return "Mild"
+    return "Clear"
 
 
 def _extent_score(concern: str, area_pct: float) -> float:

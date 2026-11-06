@@ -54,16 +54,62 @@ def _draw_contours(image: np.ndarray, mask: np.ndarray, colour: tuple[int, int, 
     return out
 
 
+_CONCERN_LABELS = {
+    "acne": "Acne-like",
+    "redness": "Redness",
+    "blemish": "Dark spot",
+}
+
+
+def _draw_region_boxes(image: np.ndarray, concern: str, regions: list[dict], colour: tuple[int, int, int]) -> np.ndarray:
+    """Draw a compact, labelled box around every retained classical region.
+
+    Region coordinates come from postprocessing after noise filtering.  These
+    mark visual patterns detected by the classical pipeline; they are not
+    diagnostic bounding boxes from a trained clinical model.
+    """
+    out = image.copy()
+    bgr = _to_bgr(colour)
+    label = _CONCERN_LABELS[concern]
+
+    for region in regions:
+        # skimage bbox is (min_row, min_col, max_row, max_col).
+        top, left, bottom, right = region["bbox"]
+        cv2.rectangle(out, (left, top), (right - 1, bottom - 1), bgr, CONTOUR_THICKNESS)
+
+        text_size, baseline = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.38, 1)
+        text_width, text_height = text_size
+        label_top = max(0, top - text_height - baseline - 6)
+        cv2.rectangle(out, (left, label_top), (left + text_width + 6, top), bgr, cv2.FILLED)
+        cv2.putText(
+            out,
+            label,
+            (left + 3, top - baseline - 3),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.38,
+            (255, 255, 255),
+            1,
+            cv2.LINE_AA,
+        )
+    return out
+
+
 def _overlay_skin_mask(image: np.ndarray, skin_mask: np.ndarray) -> np.ndarray:
     """Returns image with a translucent green skin-mask overlay."""
     return _fill_overlay(image, skin_mask, SKIN_MASK_COLOUR, SKIN_OVERLAY_OPACITY)
 
 
 def annotate_concerns(image: np.ndarray, concerns: dict) -> np.ndarray:
-    """Returns image with redness fill + acne/blemish contours."""
-    out = _fill_overlay(image, concerns["redness"]["mask"], REDNESS_COLOUR, FILL_OPACITY)
-    out = _draw_contours(out, concerns["acne"]["mask"], ACNE_COLOUR)
-    out = _draw_contours(out, concerns["blemish"]["mask"], BLEMISH_COLOUR)
+    """Returns image with classical masks, contours, and labelled region boxes."""
+    visible = {
+        name: concern if concern["severity"] != "Clear" else {**concern, "mask": np.zeros_like(concern["mask"]), "regions": []}
+        for name, concern in concerns.items()
+    }
+    out = _fill_overlay(image, visible["redness"]["mask"], REDNESS_COLOUR, FILL_OPACITY)
+    out = _draw_contours(out, visible["acne"]["mask"], ACNE_COLOUR)
+    out = _draw_contours(out, visible["blemish"]["mask"], BLEMISH_COLOUR)
+    for concern, colour in (("acne", ACNE_COLOUR), ("redness", REDNESS_COLOUR), ("blemish", BLEMISH_COLOUR)):
+        out = _draw_region_boxes(out, concern, visible[concern]["regions"], colour)
     return out
 
 
@@ -73,7 +119,7 @@ def annotate_mask(image: np.ndarray, mask: np.ndarray, colour: tuple[int, int, i
 
 
 def generate_all(original: np.ndarray, enhanced: np.ndarray, skin_mask: np.ndarray,
-                 concerns: dict, baseline_mask: np.ndarray) -> dict:
+                 concerns: dict, baseline_mask: np.ndarray, frequency: dict | None = None) -> dict:
     """Returns VisualizationOutput dict of base64 JPEG strings."""
     # baseline aur improved dono original par => sirf detection ka farq dikhe
     return {
@@ -82,6 +128,10 @@ def generate_all(original: np.ndarray, enhanced: np.ndarray, skin_mask: np.ndarr
         "skin_mask": encode_image_to_base64(_overlay_skin_mask(original, skin_mask)),
         "baseline_annotated": encode_image_to_base64(annotate_mask(original, baseline_mask)),
         "improved_annotated": encode_image_to_base64(annotate_concerns(original, concerns)),
+        "low_pass": encode_image_to_base64(np.clip(frequency["low_pass"], 0, 255).astype(np.uint8)) if frequency else None,
+        # High-pass is a signed detail signal centered at mid-grey.  Recenter it
+        # for a readable display; this is visualization only, not detector input.
+        "high_pass": encode_image_to_base64(np.clip(frequency["high_pass"], 0, 255).astype(np.uint8)) if frequency else None,
     }
 
 

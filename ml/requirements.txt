@@ -1,0 +1,24 @@
+# Bloom 2.0 ML dependencies
+#
+# Local smoke-test environment (verified working, 2026-10-30):
+#   Python 3.13, torch 2.13.0+cpu, ultralytics 8.4.192, opencv-python 5.0
+#   Install: pip install ultralytics imagehash
+#   (torch/cv2/numpy already present system-wide on this machine)
+#
+# Colab (T4 GPU) — verified-compatible loose pins:
+#   pip install "ultralytics>=8.3,<9" "albumentations>=1.4" "imagehash>=4.3"
+#   torch/torchvision ship preinstalled on Colab — do NOT reinstall them.
+#
+# Full pinned set (use only for reproducing the report environment):
+ultralytics>=8.3,<9
+albumentations>=1.4.6
+imagehash>=4.3.1
+datasets>=2.19.1
+torchmetrics>=1.4.0
+scikit-learn>=1.5.0
+pandas>=2.2.2
+Pillow>=10.3.0
+tqdm>=4.66.4
+pyyaml>=6.0.1
+# pyarrow only needed if using `datasets` with parquet caches
+pyarrow>=16.1.0

@@ -3,143 +3,90 @@ import UploadZone from "./components/UploadZone.jsx";
 import ProcessingView from "./components/ProcessingView.jsx";
 import ResultsPanel from "./components/ResultsPanel.jsx";
 import ErrorView from "./components/ErrorView.jsx";
-import { analyseImage } from "./api.js";
-import { saveScan, getHistory } from "./utils/history.js";
+import AuthScreen from "./components/AuthScreen.jsx";
+import Icon from "./components/Icon.jsx";
+import { analyseImage, analyseMultiAngle, checkGuidedCapture, deleteHistory, getCurrentUser, getHistory, login, register, saveHistory } from "./api.js";
 
 const MAX_MB = 10;
 const ALLOWED_TYPES = ["image/jpeg", "image/png"];
+const INITIAL_STATE = { view: "upload", selectedFiles: {}, previewUrls: {}, result: null, errorMessage: null, fileError: null, history: [] };
 
-const INITIAL_STATE = {
-  view: "upload",       // "upload" | "processing" | "results" | "error"
-  selectedFile: null,
-  previewUrl: null,
-  result: null,
-  errorMessage: null,
-  fileError: null,
-  history: [],
-};
-
-/**
- * Root component — owns all app state and controls which view is shown.
- */
 function App() {
   const [state, setState] = useState(INITIAL_STATE);
+  const [user, setUser] = useState(null);
+  const [authReady, setAuthReady] = useState(false);
   const controllerRef = useRef(null);
   const requestIdRef = useRef(0);
-  const previewUrlRef = useRef(null);
-
-  const update = (patch) => setState((prev) => ({ ...prev, ...patch }));
-
-  const revokePreview = () => {
-    if (previewUrlRef.current) {
-      URL.revokeObjectURL(previewUrlRef.current);
-      previewUrlRef.current = null;
-    }
-  };
-
-  const abortRequest = () => {
-    controllerRef.current?.abort();
-    controllerRef.current = null;
-  };
-
-  useEffect(() => () => {
-    abortRequest();
-    revokePreview();
-  }, []);
+  const previewUrlsRef = useRef({});
+  const update = (patch) => setState((previous) => ({ ...previous, ...(typeof patch === "function" ? patch(previous) : patch) }));
+  const revokePreviews = () => { Object.values(previewUrlsRef.current).forEach(URL.revokeObjectURL); previewUrlsRef.current = {}; };
+  const abortRequest = () => { controllerRef.current?.abort(); controllerRef.current = null; };
 
   useEffect(() => {
-    setState((prev) => ({ ...prev, history: getHistory() }));
+    const restore = async () => {
+      if (sessionStorage.getItem("bloom_session_token")) {
+        const account = await getCurrentUser();
+        if (account.user) {
+          setUser(account.user);
+          const records = await getHistory();
+          update({ history: records.records || [] });
+        } else sessionStorage.removeItem("bloom_session_token");
+      }
+      setAuthReady(true);
+    };
+    restore();
+    return () => { abortRequest(); revokePreviews(); };
   }, []);
 
-  const handleSelect = (file) => {
-    // client-side validation (server re-checks)
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      update({ fileError: "Please upload a JPEG or PNG image." });
-      return;
-    }
-    if (file.size > MAX_MB * 1024 * 1024) {
-      update({ fileError: `Image is too large. Maximum size is ${MAX_MB}MB.` });
-      return;
-    }
+  const handleAuthenticate = async (mode, form) => {
+    const account = mode === "signin" ? await login(form) : await register(form);
+    if (!account.token || !account.user) return account;
+    sessionStorage.setItem("bloom_session_token", account.token);
+    setUser(account.user);
+    const records = await getHistory();
+    update({ history: records.records || [] });
+    return {};
+  };
+  const signOut = () => { abortRequest(); revokePreviews(); sessionStorage.removeItem("bloom_session_token"); setState(INITIAL_STATE); setUser(null); };
+  const handleSelect = (angle, file) => {
+    if (!ALLOWED_TYPES.includes(file.type)) return update({ fileError: "Choose a JPEG or PNG image." });
+    if (file.size > MAX_MB * 1024 * 1024) return update({ fileError: `Choose an image smaller than ${MAX_MB} MB.` });
     abortRequest();
-    revokePreview();
     const previewUrl = URL.createObjectURL(file);
-    previewUrlRef.current = previewUrl;
-    update({ selectedFile: file, previewUrl, fileError: null });
+    if (previewUrlsRef.current[angle]) URL.revokeObjectURL(previewUrlsRef.current[angle]);
+    previewUrlsRef.current = { ...previewUrlsRef.current, [angle]: previewUrl };
+    update((previous) => ({ selectedFiles: { ...previous.selectedFiles, [angle]: file }, previewUrls: { ...previous.previewUrls, [angle]: previewUrl }, fileError: null }));
   };
-
-  const handleClear = () => {
-    abortRequest();
-    revokePreview();
-    update({ selectedFile: null, previewUrl: null, fileError: null });
-  };
-
-  const handleAnalyse = async () => {
-    abortRequest();
-    const controller = new AbortController();
-    controllerRef.current = controller;
-    const requestId = requestIdRef.current + 1;
-    requestIdRef.current = requestId;
-    update({ view: "processing", errorMessage: null });
-
-    const data = await analyseImage(state.selectedFile, { signal: controller.signal });
-    // Ignore aborted or superseded responses.
+  const handleClear = () => { abortRequest(); revokePreviews(); update({ selectedFiles: {}, previewUrls: {}, fileError: null }); };
+  const handleResult = async (data, requestId) => {
     if (requestId !== requestIdRef.current || data.status === "aborted") return;
     controllerRef.current = null;
-
     if (data.status === "success") {
-      saveScan(data);
-      update({ view: "results", result: data, history: getHistory() });
-    } else if (data.status === "quality_error") {
-      update({ view: "error", result: data, errorMessage: data.quality?.issues || [] });
-    } else {
-      update({ view: "error", result: data, errorMessage: [data.message || "Something went wrong."] });
-    }
+      const saved = await saveHistory(data);
+      update((previous) => ({ view: "results", result: data, history: saved.records || previous.history }));
+    } else if (data.status === "quality_error") update({ view: "error", result: data, errorMessage: data.quality?.issues || [] });
+    else update({ view: "error", result: data, errorMessage: [data.message || "Something went wrong."] });
   };
-
-  const handleReset = () => {
-    abortRequest();
-    revokePreview();
-    setState(INITIAL_STATE);
+  const analyse = async (work) => {
+    abortRequest(); const controller = new AbortController(); controllerRef.current = controller;
+    const requestId = requestIdRef.current + 1; requestIdRef.current = requestId; update({ view: "processing", errorMessage: null });
+    const data = await work(controller.signal); await handleResult(data, requestId);
   };
+  const reset = () => { abortRequest(); revokePreviews(); setState((previous) => ({ ...INITIAL_STATE, history: previous.history })); };
+  const removeRecord = async (recordId) => { const response = await deleteHistory(recordId); if (response.records) update({ history: response.records }); };
 
-  return (
-    <div className="min-h-screen bg-surface-subtle font-sans text-slate-800">
-      <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-surface-border bg-white px-4 sm:px-8">
-        <span className="text-xl font-semibold text-brand-700">Bloom</span>
-        <span className="text-xs text-slate-400">Not medical advice</span>
-      </header>
-
-      <main className="mx-auto max-w-4xl px-4 pb-16 sm:px-8">
-        {state.view === "upload" && (
-          <UploadZone
-            selectedFile={state.selectedFile}
-            previewUrl={state.previewUrl}
-            fileError={state.fileError}
-            onSelect={handleSelect}
-            onClear={handleClear}
-            onAnalyse={handleAnalyse}
-          />
-        )}
-
-        {state.view === "processing" && <ProcessingView />}
-
-        {state.view === "results" && <ResultsPanel result={state.result} history={state.history} onReset={handleReset} />}
-
-        {state.view === "error" && (
-          <ErrorView
-            issues={state.errorMessage}
-            isQuality={state.result?.status === "quality_error"}
-            onReset={handleReset}
-          />
-        )}
-      </main>
-
-      <footer className="border-t border-surface-border py-8 text-center text-xs text-slate-400">
-        Bloom is for educational purposes only and does not constitute medical advice. Consult a dermatologist for skin concerns.
-      </footer>
-    </div>
-  );
+  if (!authReady) return <div className="app-loading">Loading your workspace</div>;
+  if (!user) return <AuthScreen onAuthenticate={handleAuthenticate} />;
+  return <div className="app-shell">
+    <header className="app-header"><a className="wordmark" href="#top">bloom<span>.</span></a><div className="account-actions"><span>{user.email}</span><button type="button" onClick={signOut} title="Sign out"><Icon name="logout" size={18} /><span>Sign out</span></button></div></header>
+    <main className="app-main">
+      {state.view === "upload" && <UploadZone selectedFiles={state.selectedFiles} previewUrls={state.previewUrls} fileError={state.fileError} onSelect={handleSelect} onValidateCapture={checkGuidedCapture} onClear={handleClear} onAnalyseScan={() => analyse((signal) => analyseMultiAngle(state.selectedFiles, { signal }))} onAnalyseSingle={() => analyse((signal) => analyseImage(state.selectedFiles.single, { signal }))} />}
+      {state.view === "processing" && <ProcessingView />}
+      {state.view === "results" && <ResultsPanel result={state.result} history={state.history} onDeleteHistory={removeRecord} onReset={reset} />}
+      {state.view === "error" && <ErrorView issues={state.errorMessage} isQuality={state.result?.status === "quality_error"} onReset={reset} />}
+    </main>
+    <footer>Bloom provides a cosmetic image review, not a diagnosis. If a skin concern is new, painful, spreading, or worrying, contact a dermatologist.</footer>
+  </div>;
 }
 
 export default App;

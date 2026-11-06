@@ -35,7 +35,7 @@ SKIN_S_MIN, SKIN_S_MAX = 15, 210       # HSV Saturation range (widened)
 SKIN_V_MIN, SKIN_V_MAX = 40, 255       # HSV Value range (widened)
 SKIN_MORPH_KERNEL = (5, 5)             # Open/close kernel for skin mask cleanup
 ROI_EROSION_PX = 15                    # Pixels to erode from face boundary
-EXCLUSION_DILATE_PX = 5                # Extra margin around eyes/lips/brows/nose
+EXCLUSION_DILATE_PX = 12               # Safety margin around eyes/lips/brows/nose
 
 # --- MediaPipe FaceMesh (single face/landmark source; strict mode) ---
 FACE_MESH_MAX_FACES = 1
@@ -77,9 +77,11 @@ WATERSHED_MIN_DISTANCE = 10        # Min px between local maxima (spot separatio
 # --- Severity thresholds (area as % of analysable skin area) ---
 # Prototype thresholds only; not clinically validated.
 SEVERITY = {
-    "acne":    {"Mild": 1.0, "Moderate": 3.0},   # >3 = Severe
-    "redness": {"Mild": 4.0, "Moderate": 12.0},
-    "blemish": {"Mild": 2.0, "Moderate": 6.0},
+    # Values are area-percent boundaries. Below Mild is Clear; the final
+    # boundary separates Severe from Moderate. Prototype calibration only.
+    "acne":    {"Mild": 0.25, "Moderate": 1.0, "Severe": 3.0},
+    "redness": {"Mild": 1.0, "Moderate": 4.0, "Severe": 12.0},
+    "blemish": {"Mild": 0.5, "Moderate": 2.0, "Severe": 6.0},
 }
 
 # --- Naive baseline (comparison only) ---

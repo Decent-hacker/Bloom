@@ -1,0 +1,8 @@
+{
+  "dataset": "C:\\D-Drive\\Projects\\DIP\\backend\\.pytest-run2\\test_empty_manifest_reports_pe0\\dataset",
+  "dataset_version": "ede5c26270ffa6f1b96e6bf4cbf638bd9333ae9c82933b478fa3622b9c311fa5",
+  "n_annotated": 0,
+  "n_images": 0,
+  "reason": "No rows with annotation_status=annotated in manifest.csv",
+  "status": "pending"
+}

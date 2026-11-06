@@ -27,8 +27,8 @@ naive baseline and an improved detection pipeline.
    shown for unlabelled uploads**; independent metrics live in the offline
    evaluation workflow.
 
-No database. No accounts. No images stored — everything is processed in memory
-and discarded.
+Accounts keep their scan measurements separate. Original and annotated images
+are processed in memory and discarded; they are never saved in scan history.
 
 ---
 
@@ -136,6 +136,29 @@ npm install
 copy .env.example .env                             # VITE_API_URL=http://localhost:8000
 npm run dev                                        # http://localhost:5173
 ```
+
+## Run with Docker
+
+With Docker Desktop running, start the complete application from the project
+root:
+
+```bash
+docker compose up --build
+```
+
+Open [http://localhost:8080](http://localhost:8080). The browser talks to the
+same-origin frontend container, which proxies `/api` requests to the backend;
+there is no separate API URL to configure. Stop it with `Ctrl+C`, or run
+`docker compose down` in another terminal.
+
+The Docker scan is classical-only by default. An optional YOLO checkpoint is
+not baked into the image, so the health response will report its ML capability
+as unavailable unless you deliberately add a model volume/configuration later.
+
+In Docker, account records and the generated local signing key are kept in the
+named volume, so sessions survive container restarts. For hosted deployment,
+set a long random `AUTH_SECRET` in the service environment. Source photos remain
+in memory only.
 
 Module CLIs require an explicit image path:
 
@@ -261,8 +284,9 @@ POST /api/analyse   → multipart/form-data, field "file" (JPEG/PNG, ≤10MB)
 ## Privacy
 
 Bloom does not store, log, or transmit photos to a third party. Images are
-processed in memory and discarded after the response. No accounts, cookies, or
-tracking.
+processed in memory and discarded after the response. Accounts retain only
+their email, salted credential/recovery hashes, and compact scan measurements;
+users can delete each saved measurement. There are no tracking cookies.
 
 ---
 
