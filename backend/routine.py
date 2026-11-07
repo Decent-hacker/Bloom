@@ -33,7 +33,7 @@ SCAR_RULES = {
             "SPF 50+ sunscreen — non-negotiable, UV worsens scar pigmentation",
         ],
         "pm": [
-            "Adapalene 0.1% gel (OTC in India — Differin) — start 2x/week, build up",
+            "Consult a dermatologist before using any active ingredient on severe scarring",
             "Silicone‑based scar gel if atrophic",
         ],
         "avoid": ["Harsh physical scrubs on active scar tissue"],
@@ -62,7 +62,6 @@ SCAR_RULES = {
             "See a dermatologist. Severe scarring warrants professional assessment.",
             "Do not self‑treat with OTC actives at this severity.",
         ],
-        "prescription_flag": True,
     },
 }
 
@@ -102,7 +101,7 @@ ROUTINE_RULES = {
         ],
         "Severe": [
             {"step": "Cleanse", "ingredient": "Gentle non-foaming cleanser", "time": "AM/PM"},
-            {"step": "Treat", "ingredient": "Clindamycin / prescription retinoid", "time": "PM", "note": "Requires dermatologist"},
+            {"step": "Consult", "ingredient": "See a dermatologist", "time": "AM/PM", "note": "Severe cases require professional assessment — do not self-treat"},
             {"step": "Protect", "ingredient": "Non-comedogenic SPF 50+", "time": "AM", "note": "Prevents post-inflammatory hyperpigmentation"},
         ],
     },
@@ -231,12 +230,41 @@ def build_routine(concerns: dict, severity_map: dict | None = None) -> dict:
         scan = {**scan, **{key: {"severity": value} for key, value in severity_map.items()}}
 
     severity = {}
-    aliases = {"acne": "acne", "redness": "redness", "blemishes": "dark_spot", "blemish": "dark_spot", "dark_spot": "dark_spot", "scar": "scar", "rash": "redness"}
+    aliases = {
+        # Current pipeline output keys
+        "surface_anomalies": "acne",
+        "redness_contrast": "redness",
+        "dark_regions": "blemish",
+        # Legacy keys (backward compatibility)
+        "acne": "acne",
+        "redness": "redness",
+        "blemish": "blemish",
+        "blemishes": "blemish",
+        "dark_spot": "blemish",
+        "scar": "scar",
+        "rash": "redness",
+    }
     for key, value in scan.items():
         if key in aliases and isinstance(value, dict):
             routine_key = aliases[key]
             order = {"Clear": 0, "Mild": 1, "Moderate": 2, "Severe": 3}
             candidate = value.get("severity", "Clear")
+            # Map new pipeline variation labels to routine severity levels
+            variation_map = {
+                "Minimal surface irregularities": "Clear",
+                "Minimal variation": "Clear",
+                "Low variation": "Mild",
+                "Moderate variation": "Moderate",
+                "Moderate surface irregularities": "Moderate",
+                "High variation": "Severe",
+                "High surface texture variation": "Severe",
+                # Pass through existing severity labels unchanged
+                "Clear": "Clear",
+                "Mild": "Mild",
+                "Moderate": "Moderate",
+                "Severe": "Severe",
+            }
+            candidate = variation_map.get(candidate, "Clear")
             if order.get(candidate, 0) > order.get(severity.get(routine_key, "Clear"), 0):
                 severity[routine_key] = candidate
 
