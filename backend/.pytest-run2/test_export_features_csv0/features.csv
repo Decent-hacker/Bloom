@@ -1,2 +1,0 @@
-concern,region_id,area_px,perimeter_px,circularity,aspect_ratio,extent,solidity,mean_l,mean_a,mean_b,edge_density,glcm_contrast,glcm_homogeneity,glcm_energy,glcm_correlation,lbp_entropy
-acne,1,64,28.0,1.0258,1.0,1.0,1.0,108.0,128.0,128.0,0.0,0.0,1.0,1.0,1.0,1.2476
