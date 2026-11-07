@@ -20,12 +20,25 @@ from src.config import (
 
 
 def encode_image_to_base64(image_rgb: np.ndarray) -> str:
-    """Returns base64 JPEG string from an RGB numpy array."""
-    bgr = cv2.cvtColor(image_rgb, cv2.COLOR_RGB2BGR)  # OpenCV encode ke liye BGR
+    """Returns base64 JPEG from an RGB image or a display-ready grayscale map."""
+    if image_rgb.ndim == 2:
+        bgr = image_rgb
+    elif image_rgb.ndim == 3 and image_rgb.shape[2] == 3:
+        bgr = cv2.cvtColor(image_rgb, cv2.COLOR_RGB2BGR)
+    else:
+        raise ValueError("Expected a grayscale or RGB image for JPEG encoding")
     ok, buffer = cv2.imencode(".jpg", bgr, [cv2.IMWRITE_JPEG_QUALITY, JPEG_QUALITY])
     if not ok:
         raise RuntimeError("JPEG encoding failed in visualization.encode_image_to_base64")
     return base64.b64encode(buffer).decode("utf-8")
+
+
+def _signed_map_for_display(values: np.ndarray) -> np.ndarray:
+    """Center a signed frequency response at gray and stretch its visible detail."""
+    magnitude = float(np.percentile(np.abs(values), 99))
+    if magnitude <= 1e-6:
+        return np.full(values.shape, 128, dtype=np.uint8)
+    return np.clip(128 + values * (110.0 / magnitude), 0, 255).astype(np.uint8)
 
 
 def _to_bgr(colour: tuple[int, int, int]) -> tuple[int, int, int]:
@@ -137,9 +150,9 @@ def generate_all(original: np.ndarray, enhanced: np.ndarray, skin_mask: np.ndarr
         "improved_annotated": encode_image_to_base64(annotate_concerns(original, concerns)),
         "redness_map": encode_image_to_base64(_fill_overlay(original, concerns.get("redness_contrast", concerns.get("redness"))["mask"], REDNESS_COLOUR, FILL_OPACITY)),
         "low_pass": encode_image_to_base64(np.clip(frequency["low_pass"], 0, 255).astype(np.uint8)) if frequency else None,
-        # High-pass is a signed detail signal centered at mid-grey.  Recenter it
-        # for a readable display; this is visualization only, not detector input.
-        "high_pass": encode_image_to_base64(np.clip(frequency["high_pass"], 0, 255).astype(np.uint8)) if frequency else None,
+        # Display scaling does not affect any detector input or reported score.
+        "high_pass": encode_image_to_base64(_signed_map_for_display(frequency["high_pass"] - 128)) if frequency else None,
+        "dog": encode_image_to_base64(_signed_map_for_display(frequency["dog"])) if frequency else None,
     }
 
 

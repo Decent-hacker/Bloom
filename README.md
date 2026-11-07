@@ -10,7 +10,7 @@ Educational skin image analysis using classical computer vision. Bloom reviews a
 4. Maps surface detail, relative redness contrast, and dark regions in the facial image.
 5. Displays an FFT surface irregularity heatmap and relative region coverage.
 6. Reports an ITA appearance index from the image's LAB colour values. This describes image appearance, not skin type, race, or ethnicity.
-7. Presents original and processed views, per-concern variation bands, and optional guided multi-angle review.
+7. Presents a processing grid with original, enhanced, skin mask, low-pass, high-pass, DoG, FFT detail, selected surface regions, and final overlay views, plus per-concern variation bands and optional guided multi-angle review.
 
 Uploaded image bytes are processed in memory. Account history stores measurements, not the raw photos. The classical concern masks and variation bands have not been clinically validated; no accuracy is assigned to an unlabelled upload.
 
@@ -38,6 +38,7 @@ MediaPipe FaceMesh uses a pretrained model for landmark location. The skin measu
 - Contours and overlays for visual inspection.
 
 These methods measure image properties. They cannot by themselves identify a skin disease.
+High-pass and DoG contrast is stretched only for display; the measurements use the unscaled frequency responses. The FFT surface map uses a separate band-pass response and adaptive region threshold.
 
 ## Setup
 

@@ -5,9 +5,10 @@ import ProgressTrend from "./ProgressTrend.jsx";
 import RoutineCard from "./RoutineCard.jsx";
 import RoutineQuestionnaire from "./RoutineQuestionnaire.jsx";
 import { apiRequest } from "../api.js";
+import ProcessingGrid from "./ProcessingGrid.jsx";
 
 const dataUri = (value) => value ? `data:image/jpeg;base64,${value}` : null;
-const views = [["original", "Original"], ["enhanced", "Enhanced"], ["imperfection_overlay", "Surface map"], ["redness_map", "Redness map"]];
+const views = [["original", "Original"], ["enhanced", "Enhanced"], ["imperfection_heatmap", "FFT detail"], ["imperfection_overlay", "Surface regions"], ["redness_map", "Redness map"]];
 
 function FaceZones() {
   return <div className="bloom-zones"><svg viewBox="0 0 160 190" role="img" aria-label="Face diagram highlighting forehead, cheeks and chin">
@@ -46,6 +47,7 @@ export default function ResultsPanel({ result, history = [], onDeleteHistory, on
   return <div className="bloom-results">
     <div className="bloom-results-intro"><div><span className="bloom-kicker">YOUR PHOTO REVIEW</span><h1>What we can see.</h1><p>A visual reading of this image, with the photo beside every measurement.</p></div><button type="button" className="bloom-text-button" onClick={onReset}><RotateCcw size={16} />Analyze another</button></div>
     {angleResults.length > 0 && <div className="bloom-angle-tabs" aria-label="Photo angle">{angleResults.map((entry) => <button key={entry.angle} type="button" aria-pressed={shownAngle?.angle === entry.angle} onClick={() => setAngle(entry.angle)}>{entry.angle}</button>)}</div>}
+    <ProcessingGrid images={images} stageTimes={shownAngle?.stage_times_sec || result.stage_times_sec} regionCount={(shownAngle?.imperfection_map || result.imperfection_map)?.region_count || 0} />
     <div className="bloom-results-grid"><section className="bloom-image-panel"><div className="bloom-image-tabs" role="tablist" aria-label="Image views">{views.filter(([key]) => images[key]).map(([key, label]) => <button role="tab" aria-selected={active === key} key={key} type="button" onClick={() => setView(key)}>{label}</button>)}</div><div className="bloom-image-frame"><img src={dataUri(images[active])} alt={`${views.find(([key]) => key === active)?.[1]} view of the analyzed photo`} /></div><p className="bloom-image-note">Areas shown are algorithmic image patterns, not diagnoses.</p></section>
       <div className="bloom-results-side"><div className="bloom-side-heading"><span>Visible variation</span><span className="bloom-mono">{Number(result.processing_time_sec || 0).toFixed(1)}s</span></div><ConcernBadges concerns={result.concerns} /><AppearanceIndex tone={result.skin_tone} /><FaceZones />{result.imperfection_map && <p className="bloom-surface-note"><strong>{result.imperfection_map.region_count}</strong> surface-detail regions · <strong>{result.imperfection_map.coverage_percent}%</strong> coverage</p>}</div></div>
     <aside className="bloom-disclaimer"><Info size={20} strokeWidth={1.7} /><p>Bloom provides educational visual analysis only. This is not a medical diagnosis. Consult a dermatologist for skin health concerns.</p></aside>

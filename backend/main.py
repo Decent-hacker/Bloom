@@ -183,6 +183,8 @@ def _angle_result(angle: str, result: dict) -> dict:
         "angle": angle,
         "concerns": response["concerns"],
         "images": response["images"],
+        "imperfection_map": response["imperfection_map"],
+        "stage_times_sec": response["stage_times_sec"],
         "processing_time_sec": response["processing_time_sec"],
     }
 
