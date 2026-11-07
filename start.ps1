@@ -67,8 +67,8 @@ try {
     }
 
     $backendPort = Get-FreePort 8000
-    $frontendPort = Get-FreePort 5173
-    if ($backendPort -ne 8000 -or $frontendPort -ne 5173) {
+    $frontendPort = Get-FreePort 8080
+    if ($backendPort -ne 8000 -or $frontendPort -ne 8080) {
         Write-Host "Existing servers occupy the default ports. Using backend $backendPort and frontend $frontendPort."
     }
     $env:ALLOWED_ORIGINS = "http://localhost:$frontendPort,http://127.0.0.1:$frontendPort"

@@ -33,7 +33,7 @@ logger = logging.getLogger("bloom")
 MAX_SIZE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024
 # Trim whitespace and ignore empty entries (e.g. "https://a, https://b,").
 ALLOWED_ORIGINS = [origin.strip() for origin in os.getenv(
-    "ALLOWED_ORIGINS", "http://localhost:5173"
+    "ALLOWED_ORIGINS", "http://localhost:8080"
 ).split(",") if origin.strip()]
 ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/png"}
 MAGIC_BYTES = {"image/jpeg": b"\xff\xd8\xff", "image/png": b"\x89PNG\r\n\x1a\n"}

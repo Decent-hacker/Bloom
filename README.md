@@ -47,7 +47,7 @@ Install Python 3.11 and Node.js. From PowerShell in the project root, run:
 .\start.ps1
 ```
 
-Open the URL printed by the script (normally `http://localhost:5173`). If an older server occupies a port, the script selects a free one and prints it. The script creates a Python environment and installs dependencies when needed, starts both servers, and writes logs to `.run-logs/`. Press `Ctrl+C` in that PowerShell window to stop both servers. If PowerShell blocks scripts, run `powershell -ExecutionPolicy Bypass -File .\start.ps1` instead. Local account data is stored in `backend/data/`.
+Open the URL printed by the script (normally `http://localhost:8080`). If an older server occupies a port, the script selects a free one and prints it. The script creates a Python environment and installs dependencies when needed, starts both servers, and writes logs to `.run-logs/`. Press `Ctrl+C` in that PowerShell window to stop both servers. If PowerShell blocks scripts, run `powershell -ExecutionPolicy Bypass -File .\start.ps1` instead. Local account data is stored in `backend/data/`.
 
 For manual development, install `backend/requirements-dev.txt`, run `uvicorn main:app --reload` inside `backend/`, then run `npm ci` and `npm run dev` inside `frontend/`. Vite proxies `/api` to the local backend.
 

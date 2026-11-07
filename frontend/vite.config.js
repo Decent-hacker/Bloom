@@ -22,7 +22,7 @@ const cspPlugin = {
 export default defineConfig({
   plugins: [react(), cspPlugin],
   server: {
-    port: 5173,
+    port: 8080,
     strictPort: true,
     proxy: { "/api": process.env.BLOOM_BACKEND_URL || "http://127.0.0.1:8000" },
   },
