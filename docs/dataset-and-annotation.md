@@ -1,5 +1,7 @@
 # Dataset and Annotation
 
+> Historical research note. The `backend/evaluation/` runner and annotation templates were removed from the production tree. The paths and commands below describe the former workflow and do not run in the current checkout.
+
 ## Status
 
 No labelled dataset is shipped with this repository. The evaluation workflow is

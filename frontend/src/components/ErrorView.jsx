@@ -1,56 +1,14 @@
-const TIPS = [
-  "Face a window or natural light source",
-  "Hold phone at arm's length",
-  "Keep face centred and fully visible",
-  "Avoid heavy filters or flash",
-];
+import { CameraOff, ImageOff, Lightbulb } from "lucide-react";
 
-/**
- * Error / quality-gate failure view with guidance.
- * @param {string[]} issues - human-readable problem messages
- * @param {boolean} isQuality - true when the failure was a quality-gate rejection
- * @param {function():void} onReset
- */
-function ErrorView({ issues, isQuality, onReset }) {
-  return (
-    <div className="mx-auto mt-16 max-w-md" role="alert">
-      <div className="rounded-xl border border-red-200 bg-red-50 p-8">
-        <div className="text-4xl text-red-400" aria-hidden="true">⚠</div>
-        <h2 className="mt-4 text-lg font-medium text-red-900">We couldn't analyse this image</h2>
-
-        {isQuality ? (
-          <ul className="mt-3 space-y-1 text-sm text-red-700">
-            {issues.map((issue) => (
-              <li key={issue}>• {issue}</li>
-            ))}
-          </ul>
-        ) : (
-          <p className="mt-3 text-sm text-red-700">
-            {issues?.[0] || "Something went wrong. Please try again."}
-          </p>
-        )}
-
-        {isQuality && (
-          <div className="mt-4">
-            <p className="text-sm font-medium text-slate-600">Tips for a better photo:</p>
-            <ul className="mt-1 space-y-1 text-sm text-slate-500">
-              {TIPS.map((tip) => (
-                <li key={tip}>✓ {tip}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        <button
-          type="button"
-          onClick={onReset}
-          className="mt-6 w-full rounded-lg bg-brand-500 py-3 text-white hover:bg-brand-600 active:scale-95 focus:outline-none focus:ring-2 focus:ring-brand-500"
-        >
-          Try another image
-        </button>
-      </div>
-    </div>
-  );
+export default function ErrorView({ issues = [], isQuality, onReset }) {
+  const message = issues?.[0] || "This photo could not be analyzed. Choose another image and try again.";
+  const noFace = /face|landmark/i.test(message);
+  const Icon = noFace ? CameraOff : ImageOff;
+  return <section className="bloom-error" role="alert">
+    <div className="bloom-error-figure" aria-hidden="true"><svg viewBox="0 0 160 160"><path d="M80 17c-35 0-55 26-55 62 0 38 23 64 55 69 32-5 55-31 55-69 0-36-20-62-55-62Z" fill="none" stroke="currentColor" strokeWidth="2" /><path d="M53 74h14m26 0h14M64 108c11 7 21 7 32 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg></div>
+    <span className="bloom-kicker">PHOTO NEEDS A RETAKE</span><h1>{noFace ? "We couldn't find a clear face." : isQuality ? "Let's try a clearer photo." : "This image didn't work."}</h1>
+    <p className="bloom-error-message"><Icon size={18} />{message}</p>
+    <div className="bloom-error-tip"><Lightbulb size={18} /><p>Face a window, keep your face centered, and hold your camera steady. Avoid filters and flash.</p></div>
+    <button className="primary-button" type="button" onClick={onReset}>Try another photo</button>
+  </section>;
 }
-
-export default ErrorView;

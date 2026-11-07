@@ -8,7 +8,7 @@ RESIZE_TARGET = (512, 512)         # All images normalised to this before proces
 TARGET_L_MEAN = 130                # LAB L-channel normalisation target
 
 # --- Upload / decode safety (compressed size is checked in main.py) ---
-MAX_IMAGE_SIZE_MB = 10
+MAX_IMAGE_SIZE_MB = 5
 MIN_IMAGE_SIDE = 200               # Reject thumbnails/accidental crops
 MAX_IMAGE_WIDTH = 6000
 MAX_IMAGE_HEIGHT = 6000

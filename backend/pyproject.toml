@@ -10,11 +10,6 @@ line-length = 110
 target-version = "py311"
 exclude = [
     ".venv",
-    "evaluation/images",
-    "evaluation/ground_truth",
-    "evaluation/predictions",
-    "evaluation/results",
-    "experiments/output",
 ]
 
 [tool.ruff.lint]

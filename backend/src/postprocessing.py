@@ -20,22 +20,24 @@ from src.config import (
 def _severity(concern: str, area_px: int, area_pct: float) -> str:
     """Returns 'Clear' | 'Mild' | 'Moderate' | 'Severe' from unrounded extent."""
     if area_px == 0:
-        return "Clear"
-    band = SEVERITY[concern]
+        return "Minimal variation"
+    legacy = {"surface_anomalies": "acne", "redness_contrast": "redness", "dark_regions": "blemish"}
+    band = SEVERITY[legacy.get(concern, concern)]
     if area_pct >= band["Severe"]:
-        return "Severe"
+        return "High variation"
     if area_pct >= band["Moderate"]:
-        return "Moderate"
+        return "Moderate variation"
     if area_pct >= band["Mild"]:
-        return "Mild"
-    return "Clear"
+        return "Low variation"
+    return "Minimal variation"
 
 
 def _extent_score(concern: str, area_pct: float) -> float:
     """Returns relative extent in [0, 1], normalised by the concern's Moderate threshold."""
     if area_pct <= 0:
         return 0.0
-    scale = SEVERITY[concern]["Moderate"]
+    legacy = {"surface_anomalies": "acne", "redness_contrast": "redness", "dark_regions": "blemish"}
+    scale = SEVERITY[legacy.get(concern, concern)]["Moderate"]
     return round(min(area_pct / scale, 1.0), 3)
 
 
@@ -63,7 +65,7 @@ def process_concern(raw_mask: np.ndarray, concern: str, skin_area: int) -> dict:
     area_px = int((kept > 0).sum())
     area_pct_raw = 100.0 * area_px / skin_area if skin_area else 0.0
     # redness is diffuse; component count is not meaningful
-    count = -1 if concern == "redness" else len(regions)
+    count = -1 if concern in ("redness", "redness_contrast") else len(regions)
 
     return {
         "mask": kept,
@@ -73,6 +75,7 @@ def process_concern(raw_mask: np.ndarray, concern: str, skin_area: int) -> dict:
         "severity": _severity(concern, area_px, area_pct_raw),
         "extent_score": _extent_score(concern, area_pct_raw),
         "regions": regions,
+        "visual_estimate_only": True,
     }
 
 

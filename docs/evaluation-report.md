@@ -1,5 +1,7 @@
 # Evaluation Report
 
+> Historical report. The offline `backend/evaluation/` and `backend/experiments/` tools described below were removed during production cleanup. No classical detection accuracy is currently established.
+
 Date: 2026-10-21  
 Status: **detection evaluation pending — no independent annotated images exist in
 this repository.**

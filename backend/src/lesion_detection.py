@@ -117,9 +117,9 @@ def run(frequency: dict, segmentation: dict) -> dict:
     zone = segmentation["analysis_zone"]
 
     return {
-        "acne": _acne_mask(frequency["dog"], zone),
-        "redness": _redness_mask(lab, zone),
-        "blemish": _blemish_mask(lab, zone),
+        "surface_anomalies": _acne_mask(frequency["dog"], zone),
+        "redness_contrast": _redness_mask(lab, zone),
+        "dark_regions": _blemish_mask(lab, zone),
     }
 
 

@@ -258,6 +258,17 @@ def build_routine(concerns: dict, severity_map: dict | None = None) -> dict:
         {"step": "Cleanse", "ingredient": "Gentle cleanser", "note": "Use after a sweaty or sunscreen-wearing day; avoid scrubbing."},
         {"step": "Moisturize", "ingredient": moisturizer, "note": "Choose fragrance-free; even oily skin can benefit from moisturizer."},
     ]
+
+    # Apply the existing rule blocks for concerns present in this scan.
+    for concern_key, rule_key in (("redness", "redness"), ("dark_spot", "blemish"), ("acne", "acne")):
+        sev = severity.get(concern_key, "Clear")
+        if sev != "Clear" and rule_key in ROUTINE_RULES:
+            for step in ROUTINE_RULES[rule_key].get(sev, []):
+                target = pm if "PM" in step.get("time", "AM/PM") else am
+                target.append(step)
+
+    am = _dedupe_steps(am)
+    pm = _dedupe_steps(pm)
     avoid = ["Harsh scrubs and picking at spots"]
     notes = []
 

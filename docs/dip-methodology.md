@@ -1,5 +1,7 @@
 # DIP Methodology
 
+> Historical methodology note. The current production outputs are surface anomalies, redness contrast, dark regions, ITA appearance index, and an FFT surface detail map. The offline experiment runner referenced below was removed; use the root README for the current pipeline.
+
 This document records what each stage does, why it exists, its parameters, and
 what it does **not** prove. All numeric parameters live in `backend/src/config.py`.
 

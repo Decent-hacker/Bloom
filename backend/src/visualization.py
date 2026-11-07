@@ -58,6 +58,9 @@ _CONCERN_LABELS = {
     "acne": "Acne-like",
     "redness": "Redness",
     "blemish": "Dark spot",
+    "surface_anomalies": "Surface detail",
+    "redness_contrast": "Red contrast",
+    "dark_regions": "Dark region",
 }
 
 
@@ -102,13 +105,17 @@ def _overlay_skin_mask(image: np.ndarray, skin_mask: np.ndarray) -> np.ndarray:
 def annotate_concerns(image: np.ndarray, concerns: dict) -> np.ndarray:
     """Returns image with classical masks, contours, and labelled region boxes."""
     visible = {
-        name: concern if concern["severity"] != "Clear" else {**concern, "mask": np.zeros_like(concern["mask"]), "regions": []}
+        name: concern if concern.get("severity") not in ("Clear", "Minimal variation") else {**concern, "mask": np.zeros_like(concern["mask"]), "regions": []}
         for name, concern in concerns.items()
     }
-    out = _fill_overlay(image, visible["redness"]["mask"], REDNESS_COLOUR, FILL_OPACITY)
-    out = _draw_contours(out, visible["acne"]["mask"], ACNE_COLOUR)
-    out = _draw_contours(out, visible["blemish"]["mask"], BLEMISH_COLOUR)
-    for concern, colour in (("acne", ACNE_COLOUR), ("redness", REDNESS_COLOUR), ("blemish", BLEMISH_COLOUR)):
+    aliases = (("surface_anomalies", "acne", ACNE_COLOUR), ("redness_contrast", "redness", REDNESS_COLOUR), ("dark_regions", "blemish", BLEMISH_COLOUR))
+    out = image.copy()
+    for current, old, colour in aliases:
+        concern = current if current in visible else old
+        if concern == "redness_contrast" or concern == "redness":
+            out = _fill_overlay(out, visible[concern]["mask"], colour, FILL_OPACITY)
+        else:
+            out = _draw_contours(out, visible[concern]["mask"], colour)
         out = _draw_region_boxes(out, concern, visible[concern]["regions"], colour)
     return out
 
@@ -128,6 +135,7 @@ def generate_all(original: np.ndarray, enhanced: np.ndarray, skin_mask: np.ndarr
         "skin_mask": encode_image_to_base64(_overlay_skin_mask(original, skin_mask)),
         "baseline_annotated": encode_image_to_base64(annotate_mask(original, baseline_mask)),
         "improved_annotated": encode_image_to_base64(annotate_concerns(original, concerns)),
+        "redness_map": encode_image_to_base64(_fill_overlay(original, concerns.get("redness_contrast", concerns.get("redness"))["mask"], REDNESS_COLOUR, FILL_OPACITY)),
         "low_pass": encode_image_to_base64(np.clip(frequency["low_pass"], 0, 255).astype(np.uint8)) if frequency else None,
         # High-pass is a signed detail signal centered at mid-grey.  Recenter it
         # for a readable display; this is visualization only, not detector input.

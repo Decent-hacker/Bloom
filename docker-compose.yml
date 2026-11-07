@@ -4,7 +4,7 @@ services:
       context: ./backend
     environment:
       ALLOWED_ORIGINS: http://localhost:8080
-      MAX_IMAGE_SIZE_MB: "10"
+      MAX_IMAGE_SIZE_MB: "5"
       LOG_LEVEL: INFO
       BLOOM_DB_PATH: /app/data/bloom.db
       # Set AUTH_SECRET in a local .env before internet deployment so active

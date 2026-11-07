@@ -9,18 +9,8 @@ venv/
 .coverage
 *.egg-info/
 backend/data/
-backend/.pytest-run/
-
-# Generated evaluation / experiment artifacts
-backend/evaluation/images/*
-!backend/evaluation/images/.gitkeep
-backend/evaluation/ground_truth/*
-!backend/evaluation/ground_truth/.gitkeep
-backend/evaluation/predictions/*
-!backend/evaluation/predictions/.gitkeep
-backend/evaluation/results/*
-!backend/evaluation/results/.gitkeep
-backend/experiments/output/
+# Local test artifacts
+backend/.pytest-*/
 
 # Node
 node_modules/
@@ -31,9 +21,12 @@ dist/
 .DS_Store
 Thumbs.db
 
-# ML module artifacts (data, runs, model weights, private images)
+# ML research code stays in ml/; generated research data and models are ignored.
 ml/data/
 ml/runs/
 ml/annotations/images/
+ml/.ipynb_checkpoints/
+# Local annotation pool; not application source.
+mine/
 *.pt
 *.onnx

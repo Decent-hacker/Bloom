@@ -36,10 +36,11 @@ ALLOWED_ORIGINS = [origin.strip() for origin in os.getenv(
     "ALLOWED_ORIGINS", "http://localhost:5173"
 ).split(",") if origin.strip()]
 ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/png"}
-MAGIC_BYTES = (b"\xff\xd8\xff", b"\x89PNG")  # JPEG, PNG signatures
+MAGIC_BYTES = {"image/jpeg": b"\xff\xd8\xff", "image/png": b"\x89PNG\r\n\x1a\n"}
 REQUIRED_ANGLES = {"front", "left", "right"}
 VALID_ANGLES = REQUIRED_ANGLES
-SEVERITY_RANK = {"Clear": 0, "Mild": 1, "Moderate": 2, "Severe": 3}
+SEVERITY_RANK = {"Clear": 0, "Mild": 1, "Moderate": 2, "Severe": 3,
+                 "Minimal variation": 0, "Low variation": 1, "Moderate variation": 2, "High variation": 3}
 FRONT_YAW_MAX = 0.18
 SIDE_YAW_MIN = 0.14
 
@@ -110,9 +111,11 @@ async def read_image_safely(file: UploadFile) -> bytes:
     return content
 
 
-def verify_file_signature(content: bytes) -> None:
+def verify_file_signature(content: bytes, content_type: str | None = None) -> None:
     """Raises ValueError if the bytes don't match a JPEG/PNG signature."""
-    if not content.startswith(MAGIC_BYTES):
+    if not any(content.startswith(signature) for signature in MAGIC_BYTES.values()) or (
+        content_type is not None and not content.startswith(MAGIC_BYTES.get(content_type, b"\x00"))
+    ):
         raise InvalidImageError("File content does not match an allowed image format.")
 
 
@@ -122,6 +125,7 @@ def make_concern_json(concern: dict) -> dict:
         "severity": concern["severity"],
         "area_pct": round(float(concern["area_pct"]), 2),
         "extent_score": float(concern["extent_score"]),
+        "visual_estimate_only": True,
     }
     if concern["count"] != -1:
         out["count"] = int(concern["count"])
@@ -137,9 +141,9 @@ def build_success(result: dict) -> dict:
         "detection": result["detection"],
         "images": result["images"],
         "concerns": {
-            "acne": make_concern_json(result["concerns"]["acne"]),
-            "redness": make_concern_json(result["concerns"]["redness"]),
-            "blemishes": make_concern_json(result["concerns"]["blemish"]),  # internal -> API
+            "surface_anomalies": make_concern_json(result["concerns"].get("surface_anomalies", result["concerns"].get("acne"))),
+            "redness_contrast": make_concern_json(result["concerns"].get("redness_contrast", result["concerns"].get("redness"))),
+            "dark_regions": make_concern_json(result["concerns"].get("dark_regions", result["concerns"].get("blemish"))),
         },
         "metrics": None,
         "metrics_note": (
@@ -147,6 +151,9 @@ def build_success(result: dict) -> dict:
             "See the offline evaluation workflow for independent ground-truth metrics."
         ),
         "mediapipe_mode": result["mediapipe_mode"],
+        "skin_tone": result.get("skin_tone"),
+        "imperfection_map": result.get("imperfection_map"),
+        "stage_times_sec": result.get("stage_times_sec", {}),
     }
     if "ml" in result:
         response["ml"] = result["ml"]
@@ -161,7 +168,7 @@ def _best_angle_concerns(results: list[dict]) -> dict:
     total.  Individual angle images remain available for review.
     """
     combined = {}
-    for concern in ("acne", "redness", "blemish"):
+    for concern in results[0]["concerns"]:
         combined[concern] = max(
             (result["concerns"][concern] for result in results),
             key=lambda item: (SEVERITY_RANK[item["severity"]], item["area_pct"]),
@@ -271,7 +278,7 @@ async def analyse(
         })
     validate_content_type(file)
     content = await read_image_safely(file)
-    verify_file_signature(content)
+    verify_file_signature(content, file.content_type)
     inspect_image(content)
 
     # --- Classical pipeline ---
@@ -350,7 +357,7 @@ async def analyse_multi(
     for angle, file in zip(angles, files):
         validate_content_type(file)
         content = await read_image_safely(file)
-        verify_file_signature(content)
+        verify_file_signature(content, file.content_type)
         inspect_image(content)
         result = pipeline.run(content)
         if not result.get("quality", {}).get("passed", False):
@@ -398,7 +405,7 @@ async def capture_check(
 
     validate_content_type(file)
     content = await read_image_safely(file)
-    verify_file_signature(content)
+    verify_file_signature(content, file.content_type)
     inspect_image(content)
     image, quality = preprocessing.run(content)
     if not quality["passed"]:

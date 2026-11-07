@@ -58,10 +58,10 @@ def test_success_contract(monkeypatch):
     assert body["status"] == "success"
     assert body["metrics"] is None
     assert body["detection"]["fallback_used"] is False
-    assert body["concerns"]["acne"]["severity"] == "Clear"
-    assert "extent_score" in body["concerns"]["acne"]
-    assert "confidence" not in body["concerns"]["acne"]
-    assert "count" not in body["concerns"]["redness"]
+    assert body["concerns"]["surface_anomalies"]["visual_estimate_only"] is True
+    assert "extent_score" in body["concerns"]["surface_anomalies"]
+    assert "confidence" not in body["concerns"]["surface_anomalies"]
+    assert "count" not in body["concerns"]["redness_contrast"]
 
 
 def test_multi_angle_contract_uses_all_required_views(monkeypatch):

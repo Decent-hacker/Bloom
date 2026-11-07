@@ -1,5 +1,7 @@
 # Implementation Audit
 
+> Historical snapshot from 2026-10-21. See the root README and `docs/project-summary.md` for current behavior, names, limits, and file locations.
+
 Date: 2026-10-21  
 Repository: `C:\D-Drive\Projects\DIP`  
 Audited commit: `cb623f3 stage-10`  
