@@ -18,7 +18,27 @@
 }
 
 body, .app-shell { background: var(--canvas); color: var(--ink); font-family: var(--font-body); }
-.auth-shell { background:var(--canvas); }.auth-intro { background:var(--stone); }.auth-copy h1, .auth-card h2, .routine-invite h2, .routine-questionnaire h2, .routine-result h2 { font-family:var(--font-display); font-weight:400; color:var(--ink); }.routine-invite { background:var(--paper); }
+.auth-shell { grid-template-columns: 1fr 1fr; background:var(--canvas); }
+.auth-intro { background:var(--stone); border-right:1px solid var(--line); padding:48px clamp(32px,6vw,96px); }
+.auth-wordmark { display:inline-flex; align-items:center; gap:10px; color:var(--ink); font-family:var(--font-display); font-size:32px; font-weight:400; letter-spacing:-.025em; }
+.auth-wordmark svg { color:var(--sage); }
+.auth-copy { max-width:480px; }
+.auth-copy h1, .auth-card h2, .routine-invite h2, .routine-questionnaire h2, .routine-result h2 { font-family:var(--font-display); font-weight:400; color:var(--ink); }
+.auth-copy h1 { font-size:48px; line-height:1.08; letter-spacing:-.025em; }
+.auth-copy>p:last-child { color:var(--muted); font-size:16px; line-height:1.65; }
+.principles { max-width:480px; border-top:1px solid var(--line); padding-top:24px; }
+.principles svg { color:var(--sage); }
+.principles strong { color:var(--ink); font-size:14px; }
+.principles small { color:var(--muted); font-size:12px; }
+.auth-panel { background:var(--paper); padding:48px; }
+.auth-card { width:min(100%,420px); }
+.auth-card h2 { font-size:32px; line-height:1.15; letter-spacing:-.025em; }
+.auth-card .muted { color:var(--muted); font-size:14px; }
+.auth-form label { color:var(--ink); font-size:14px; }
+.auth-form input,.auth-form select { height:48px; border-color:var(--line); border-radius:8px; color:var(--ink); }
+.auth-card .switch-copy { color:var(--muted); font-size:14px; }
+.auth-card .switch-copy button { color:var(--sage); }
+.routine-invite { background:var(--paper); }
 .app-header, .app-main, .app-shell footer { max-width: 1100px; }
 .app-main { padding-bottom: 80px; }
 .bloom-header { height: 76px; border-bottom: 1px solid var(--line); }
@@ -73,5 +93,6 @@ body, .app-shell { background: var(--canvas); color: var(--ink); font-family: va
 .bloom-metrics.is-compact .bloom-metric { padding:10px 12px; box-shadow:none; }.bloom-metrics.is-compact .bloom-metric-title { font-size:13px; }.bloom-metrics.is-compact .bloom-band { font-size:11px; }
 @media (max-width:1024px) { .bloom-results-grid { gap:18px; }.bloom-image-panel { grid-column:span 7; }.bloom-results-side { grid-column:span 5; } }
 @media (max-width:640px) { :root { --space-section:48px; }.app-main { padding-left:16px; padding-right:16px; }.bloom-header .wordmark { font-size:28px; }.bloom-header .account-actions>span { display:none; }.capture-intro { border-right:0; border-bottom:1px solid var(--line); }.capture-intro h1, .bloom-results-intro h1, .bloom-processing h1 { font-size:32px; }.bloom-results-intro { align-items:start; flex-direction:column; }.bloom-image-panel, .bloom-results-side { grid-column:1 / -1; }.bloom-image-frame { min-height:260px; }.bloom-processing { grid-template-columns:1fr; padding:48px 0; gap:24px; }.bloom-processing img { max-height:260px; }.bloom-metric-heading { align-items:start; }.bloom-band { white-space:normal; text-align:right; } }
+@media (max-width:800px) { .auth-shell { grid-template-columns:1fr; }.auth-intro { min-height:0; gap:48px; padding:32px 24px; border-right:0; border-bottom:1px solid var(--line); }.auth-copy { margin:0; }.auth-copy h1 { font-size:32px; }.auth-panel { padding:48px 24px; }.principles { display:none; } }
 @media (prefers-reduced-motion:reduce) { .bloom-skeleton { animation:none; } }
 .bloom-error { max-width:530px; margin:80px auto; padding:40px; background:var(--paper); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); text-align:center; }.bloom-error-figure { width:120px; margin:0 auto 22px; color:var(--sage); }.bloom-error-figure svg { width:100%; }.bloom-error h1 { font:400 32px/1.15 var(--font-display); margin:12px 0 20px; }.bloom-error-message, .bloom-error-tip { display:flex; align-items:start; gap:10px; text-align:left; font-size:14px; line-height:1.6; }.bloom-error-message { color:var(--ink); }.bloom-error-message svg, .bloom-error-tip svg { color:var(--sage); flex:none; }.bloom-error-tip { margin:22px 0; padding:16px; background:var(--stone); border-radius:8px; color:var(--muted); }.bloom-error-tip p { margin:0; }

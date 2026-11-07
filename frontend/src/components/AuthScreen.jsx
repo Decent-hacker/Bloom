@@ -1,5 +1,5 @@
 import { useState } from "react";
-import Icon from "./Icon.jsx";
+import { Camera, Leaf, ShieldCheck } from "lucide-react";
 import { getRecoveryQuestion, resetPassword } from "../api.js";
 
 const QUESTIONS = [
@@ -40,15 +40,15 @@ function AuthScreen({ onAuthenticate }) {
   return (
     <main className="auth-shell">
       <section className="auth-intro">
-        <a className="wordmark" href="#top" aria-label="Bloom home">bloom<span>.</span></a>
+        <a className="wordmark auth-wordmark" href="#top" aria-label="Bloom home"><Leaf size={23} strokeWidth={1.6} aria-hidden="true" />Bloom</a>
         <div className="auth-copy">
-          <p className="eyebrow">A little more care, every day</p>
-          <h1>Feel at home<br />in your skin.</h1>
-          <p>A calm space to understand what your skin may be showing, then find a gentle routine that fits you, your climate, and your everyday life.</p>
+          <p className="eyebrow">A PRIVATE PHOTO REVIEW</p>
+          <h1>A clearer look<br />at your skin.</h1>
+          <p>Explore visible patterns in one clear photo. Bloom keeps the image review in memory and gives you a simple way to revisit your measurements.</p>
         </div>
         <div className="principles" aria-label="Bloom principles">
-          <div><Icon name="camera" /><span><strong>Start with a closer look</strong><small>One photo or a guided face scan.</small></span></div>
-          <div><Icon name="shield" /><span><strong>Care that feels personal</strong><small>Simple suggestions shaped around your answers.</small></span></div>
+          <div><Camera size={21} strokeWidth={1.6} /><span><strong>Start with a clear photo</strong><small>Use one image or a guided three-view scan.</small></span></div>
+          <div><ShieldCheck size={21} strokeWidth={1.6} /><span><strong>Your photo stays private</strong><small>Images are analysed in memory, not saved to history.</small></span></div>
         </div>
       </section>
 
