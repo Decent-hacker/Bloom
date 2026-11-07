@@ -9,13 +9,13 @@ import numpy as np
 from src import (
     enhancement,
     frequency_decomposition,
+    imperfection_map,
     lesion_detection,
     postprocessing,
     preprocessing,
     skin_segmentation,
-    visualization,
     skin_tone,
-    imperfection_map,
+    visualization,
 )
 
 
