@@ -112,7 +112,7 @@ function GuidedCameraCapture({ onCapture, onValidateCapture, onComplete, onCance
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-600">Guided camera</p>
             <h2 className="mt-1 text-lg font-semibold text-slate-900">{current?.title}</h2>
           </div>
-          <span className="rounded-full bg-white px-3 py-1 font-mono text-xs text-brand-700">
+          <span className="rounded-full bg-white px-3 py-1 font-sans text-xs font-semibold text-brand-700">
             {`${stepIndex + 1} / ${REQUIRED_STEPS.length}`}
           </span>
         </div>
