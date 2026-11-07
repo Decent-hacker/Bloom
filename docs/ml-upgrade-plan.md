@@ -535,7 +535,6 @@ that the prof can demo after every scan.
 | Streamlit Cloud | Fast to build | Python-only UI, duplicates React work | Skip |
 | Vercel + serverless fn | Great frontend hosting | Cold-start + 50 MB fn limit kills torch | Frontend-only hosting option |
 | College server / local demo | Zero cost, offline-proof | Not a URL | **Mandatory offline backup** — always have the app running locally for demo day regardless of cloud status |
-| Docker + any VPS | Full control | Ops burden | Skip for this project |
 
 ### 13.4 Demo-day resilience checklist
 
@@ -550,8 +549,7 @@ that the prof can demo after every scan.
 
 ### 13.5 Deployment work items (add to timeline §15)
 
-1. Dockerfile for backend (already exists — extend with torch deps + model
-   fetch step)
+1. Verify the local `start.ps1` launcher with the optional model installed.
 2. HF Hub private model repo + fetch-on-boot with checksum
 3. Render blueprint update: health checks, env vars
    (`MODEL_URL`, `MODEL_SHA256`, `PIPELINE_DEFAULT=hybrid`)
@@ -586,7 +584,7 @@ that the prof can demo after every scan.
 |---|---|---|---|---|
 | 1 | Download D1–D5; inspect labels; write harmonize.py for D2 | Set up ml/ scaffold, Colab notebooks, YOLO smoke test | Write consent form + annotation guideline; first 10 pilot subjects | Map routine keys to new taxonomy; write `scar` rules |
 | 2 | Harmonize D3, D4; dedupe; build classes.yaml; fix splits | Baseline YOLOv8s train on fused pool (run a) | Continue collection (target 40 subjects) | Conflict matrix in routine engine + unit tests |
-| 3 | DermaCon-IN weak-label crop pipeline; manual review | Augmentation ablation runs (b, c, d) | Annotation in earnest; κ measurement | Dockerfile + model-fetch-on-boot (local test) |
+| 3 | DermaCon-IN weak-label crop pipeline; manual review | Augmentation ablation runs (b, c, d) | Annotation in earnest; κ measurement | Local launcher + model-fetch-on-boot test |
 | 4 | Freeze v1 dataset (hash it) | Severity head or area-fraction severity; 3-seed repeat | Finish collection (60–100 subjects) | Deploy classical path to Render; verify CI |
 | 5 | — | Multi-angle fusion; per-angle vs fused eval | Adjudication pass | Deploy ML path; Gradio HF Space; load test |
 | 6 | — | Full evaluation: classical vs ML vs hybrid; tone slicing; CIs | — | Routine demo polish; step-up warnings; disclaimer audit |

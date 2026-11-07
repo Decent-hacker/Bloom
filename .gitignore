@@ -9,6 +9,7 @@ venv/
 .coverage
 *.egg-info/
 backend/data/
+.run-logs/
 # Local test artifacts
 backend/.pytest-*/
 

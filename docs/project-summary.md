@@ -8,7 +8,7 @@ The project combines:
 
 - **Classical digital image processing (DIP):** the current production analysis path.
 - **Deep learning:** a planned and partially prepared acne-lesion-detection module.
-- **Web application engineering:** a React frontend, FastAPI backend, authentication, safe upload handling, and Docker deployment.
+- **Web application engineering:** a React frontend, FastAPI backend, authentication, safe upload handling, and a local PowerShell launcher.
 
 Suggested academic title:
 
@@ -41,7 +41,7 @@ The API analyses photos in memory. The README states that source photos and gene
 | Classical CV | OpenCV, scikit-image, SciPy, NumPy, MediaPipe FaceMesh |
 | ML experiments | PyTorch, Ultralytics YOLOv8 |
 | Storage/auth | Backend account/auth store with per-account measurements |
-| Deployment | Docker Compose, Render configuration |
+| Local run / hosting | `start.ps1` for local use; Render configuration for optional hosting |
 
 ### Classical CV pipeline
 

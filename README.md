@@ -22,7 +22,7 @@ Uploaded image bytes are processed in memory. Account history stores measurement
 | API | FastAPI, Python 3.11, Uvicorn |
 | Image processing | OpenCV, NumPy, SciPy, scikit-image, Pillow |
 | Face landmarks | MediaPipe FaceMesh |
-| Deployment | Docker Compose |
+| Local run | PowerShell launcher, Uvicorn, Vite |
 
 MediaPipe FaceMesh uses a pretrained model for landmark location. The skin measurements and visual maps use classical image processing; the default scan does not use a custom trained disease classifier.
 
@@ -41,15 +41,15 @@ These methods measure image properties. They cannot by themselves identify a ski
 
 ## Setup
 
-Install Docker Desktop, then from the project root run:
+Install Python 3.11 and Node.js. From PowerShell in the project root, run:
 
-```bash
-docker compose up --build
+```powershell
+.\start.ps1
 ```
 
-Open `http://localhost:8080`. The frontend proxies API requests to the backend. To stop, use `Ctrl+C`, or run `docker compose down` in another terminal. Account data is stored in a named Docker volume.
+Open the URL printed by the script (normally `http://localhost:5173`). If an older server occupies a port, the script selects a free one and prints it. The script creates a Python environment and installs dependencies when needed, starts both servers, and writes logs to `.run-logs/`. Press `Ctrl+C` in that PowerShell window to stop both servers. If PowerShell blocks scripts, run `powershell -ExecutionPolicy Bypass -File .\start.ps1` instead. Local account data is stored in `backend/data/`.
 
-For local development, install `backend/requirements-dev.txt`, run `uvicorn main:app --reload` inside `backend/`, then run `npm install` and `npm run dev` inside `frontend/`.
+For manual development, install `backend/requirements-dev.txt`, run `uvicorn main:app --reload` inside `backend/`, then run `npm ci` and `npm run dev` inside `frontend/`. Vite proxies `/api` to the local backend.
 
 Run backend tests from `backend/` with `python -m pytest tests -q`. Production Python dependencies are pinned in `requirements.txt`; the development file adds pytest, HTTPX, and Ruff. A model checkpoint is optional for the default scan.
 

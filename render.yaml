@@ -11,7 +11,7 @@ services:
       - key: ALLOWED_ORIGINS
         value: https://bloom.onrender.com
       - key: MAX_IMAGE_SIZE_MB
-        value: "10"
+        value: "5"
       - key: LOG_LEVEL
         value: INFO
 

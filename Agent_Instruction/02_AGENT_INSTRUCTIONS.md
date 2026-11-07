@@ -89,7 +89,7 @@ backend/
 │   └── visualization.py
 ├── requirements.txt
 ├── .env.example
-└── Dockerfile
+└── tests/
 ```
 
 ### Frontend

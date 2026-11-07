@@ -1,6 +1,5 @@
 const REQUEST_TIMEOUT_MS = 60000;
-// Docker serves the SPA and proxies /api through the same origin.  Keep the
-// explicit environment URL for local two-server development and Render.
+// Vite proxies /api in local development. The explicit URL is for hosted builds.
 const API_BASE = import.meta.env.VITE_API_URL || "";
 
 const authHeaders = () => {

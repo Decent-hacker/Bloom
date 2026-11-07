@@ -25,8 +25,8 @@ def _load_secret() -> bytes:
     configured = os.getenv("AUTH_SECRET")
     if configured:
         return configured.encode("utf-8")
-    # A persistent local key keeps sessions valid across container restarts.
-    # The Docker volume also stores the account database beside this file.
+    # A persistent local key keeps sessions valid across server restarts.
+    # It lives beside the account database.
     key_path = DB_PATH.parent / "auth_secret.key"
     key_path.parent.mkdir(parents=True, exist_ok=True)
     try:
