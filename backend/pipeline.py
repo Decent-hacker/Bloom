@@ -103,7 +103,9 @@ def run_stages(image_bytes: bytes) -> dict:
 
 def run(image_bytes: bytes) -> dict:
     """Returns the public PipelineOutput used by the API (base64 images, no stage arrays)."""
+    start = time.perf_counter()
     stages = run_stages(image_bytes)
+    stages_done = time.perf_counter()
     if not stages["quality"]["passed"]:
         return {"quality": stages["quality"], "stage_times_sec": stages["stage_times_sec"], "processing_time_sec": stages["processing_time_sec"]}
 
@@ -117,7 +119,9 @@ def run(image_bytes: bytes) -> dict:
     )
     images["imperfection_heatmap"] = visualization.encode_image_to_base64(stages["imperfection_map"]["heatmap"])
     images["imperfection_overlay"] = visualization.encode_image_to_base64(stages["imperfection_map"]["overlay"])
+    visualization_done = time.perf_counter()
     from PIL import Image as PILImage
+
     from ml_inference import run_ml_analysis
 
     try:
@@ -125,17 +129,22 @@ def run(image_bytes: bytes) -> dict:
         ml_result = run_ml_analysis(pil_img)
     except Exception:
         ml_result = {"available": False}
+    ml_done = time.perf_counter()
     return {
         "quality": stages["quality"],
         "concerns": stages["concerns"],
         "skin_tone": stages["skin_tone"],
         "imperfection_map": {key: value for key, value in stages["imperfection_map"].items() if key not in ("heatmap", "overlay")},
-        "stage_times_sec": stages["stage_times_sec"],
+        "stage_times_sec": {
+            **stages["stage_times_sec"],
+            "visualization": round(visualization_done - stages_done, 4),
+            "ml_inference": round(ml_done - visualization_done, 4),
+        },
         "images": images,
         "detection": stages["detection"],
         "ml": ml_result,
         "mediapipe_mode": stages["mediapipe_mode"],
-        "processing_time_sec": stages["processing_time_sec"],
+        "processing_time_sec": round(ml_done - start, 2),
     }
 
 

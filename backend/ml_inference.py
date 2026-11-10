@@ -12,6 +12,7 @@ from threading import Lock
 from typing import Any
 
 import numpy as np
+
 try:
     import torch
     import torch.nn as nn
@@ -149,6 +150,18 @@ _signals_lock = Lock()
 _acne_lock = Lock()
 
 
+def analysis_model_status() -> dict:
+    """Report installed checkpoints and whether lazy model loading has occurred."""
+    signals_loaded = _signals_model is not None
+    acne_loaded = _acne_detector is not None
+    return {
+        "available": signals_loaded and acne_loaded,
+        "installed": SIGNALS_PATH.is_file() and ACNE_PATH.is_file(),
+        "signals_loaded": signals_loaded,
+        "acne_loaded": acne_loaded,
+    }
+
+
 class SkinSignalsModel(nn.Module if nn is not None else object):
     def __init__(self):
         if nn is None:
@@ -272,8 +285,9 @@ def run_ml_analysis(img_pil) -> dict:
 
 
 if __name__ == "__main__":
-    from PIL import Image
     import sys
+
+    from PIL import Image
 
     if len(sys.argv) != 2:
         raise SystemExit("usage: python ml_inference.py <image_path>")

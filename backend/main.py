@@ -19,7 +19,7 @@ from slowapi.util import get_remote_address
 import auth_store
 import pipeline
 import routine
-from ml_inference import detect, model_status
+from ml_inference import analysis_model_status, detect, model_status
 from src import enhancement, preprocessing, skin_segmentation
 from src.config import MAX_IMAGE_SIZE_MB, RATE_LIMIT
 from src.errors import FaceLandmarkError, InvalidImageError
@@ -51,8 +51,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,      # explicit list, never "*" in production
     allow_credentials=False,
-    allow_methods=["POST", "GET"],
-    allow_headers=["Content-Type"],
+    allow_methods=["POST", "GET", "DELETE"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
 # In-process rate limiting: per worker, reset on restart. This deployment is scoped
@@ -192,6 +192,7 @@ def _angle_result(angle: str, result: dict) -> dict:
     return {
         "angle": angle,
         "concerns": response["concerns"],
+        "ml": response["ml"],
         "images": response["images"],
         "imperfection_map": response["imperfection_map"],
         "stage_times_sec": response["stage_times_sec"],
@@ -209,8 +210,8 @@ async def root() -> dict:
 
 @app.get("/api/health")
 async def health() -> dict:
-    """Health check used by Render. Returns whether ML model is loaded."""
-    return {"status": "ok", "ml": model_status()}
+    """Health check used by Render. Reports the lazy-loaded analysis models."""
+    return {"status": "ok", "ml": analysis_model_status()}
 
 
 @app.post("/api/auth/register")

@@ -144,3 +144,14 @@ def test_cors_allowed_and_denied_origins():
     assert allowed.headers.get("access-control-allow-origin") == "http://localhost:5173"
     denied = client.get("/api/health", headers={"Origin": "https://evil.example"})
     assert denied.headers.get("access-control-allow-origin") is None
+
+
+def test_cors_preflight_allows_authenticated_history_requests():
+    for method, path in (("GET", "/api/history"), ("DELETE", "/api/history/1")):
+        response = client.options(path, headers={
+            "Origin": "http://localhost:5173",
+            "Access-Control-Request-Method": method,
+            "Access-Control-Request-Headers": "authorization,content-type",
+        })
+        assert response.status_code == 200
+        assert response.headers["access-control-allow-origin"] == "http://localhost:5173"

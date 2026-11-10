@@ -16,7 +16,7 @@ This is a plan for a two-service Render deployment. It is not a deployment recor
 - Set start command to `cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT`.
 - Set `PYTHON_VERSION` to a supported Python 3.11 release. Set `AUTH_SECRET` to a long random secret and `ALLOWED_ORIGINS` to the exact frontend HTTPS origin. Set the health check path to `/api/health`.
 - Decide how to preserve accounts and scan history before inviting users. With the current SQLite store, attach a persistent disk at `/var/data` and set `BLOOM_DB_PATH=/var/data/bloom.db`. Render's default filesystem is ephemeral; persistent disks require a paid service and limit scaling to one instance. An external database would require an application change.
-- Size the service after measuring a real scan with both ML models. The current health endpoint reports the older optional acne checkpoint's status, so its `ml.available` value does not prove that the new signal and acne models loaded; verify a successful scan response separately.
+- Size the service after measuring a real scan with both ML models. The health endpoint reports whether the two checkpoints are installed and whether both lazy-loaded models have loaded; verify a successful scan response separately.
 
 ## 3. Create the frontend site
 
