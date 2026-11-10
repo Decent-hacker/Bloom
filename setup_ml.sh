@@ -4,7 +4,9 @@ set -eu
 
 cd "$(dirname "$0")" || { echo "FAIL: locate project root"; exit 1; }
 
-if [ -x backend/.venv/bin/python ]; then
+if [ -n "${BLOOM_PYTHON:-}" ]; then
+    PYTHON="$BLOOM_PYTHON"
+elif [ -x backend/.venv/bin/python ]; then
     PYTHON=backend/.venv/bin/python
 elif [ -x backend/.venv/Scripts/python.exe ]; then
     PYTHON=backend/.venv/Scripts/python.exe
@@ -17,6 +19,7 @@ else
     exit 1
 fi
 echo "OK: using $PYTHON"
+"$PYTHON" -c 'import sys; sys.exit(0 if sys.version_info[:2] == (3, 11) else "FAIL: Bloom production requires Python 3.11; select it with BLOOM_PYTHON")'
 
 echo "Installing huggingface_hub, ultralytics, timm, torchvision, torch..."
 if "$PYTHON" -m pip --version >/dev/null 2>&1; then
@@ -41,6 +44,22 @@ else
     echo "FAIL: dependency installation"
     exit 1
 fi
+
+# Fail during the build if native libraries or the selected wheel set cannot load.
+if "$PYTHON" -m pip --version >/dev/null 2>&1; then
+    "$PYTHON" -m pip check
+else
+    uv pip check --python "$PYTHON"
+fi
+"$PYTHON" - <<'PY'
+import cv2
+import mediapipe
+import torch
+import torchvision
+import timm
+from ultralytics import YOLO
+print("OK: image processing and CPU ML runtime imports")
+PY
 
 if mkdir -p backend/models; then
     echo "OK: backend/models ready"

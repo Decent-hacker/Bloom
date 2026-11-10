@@ -47,3 +47,10 @@ The ML results supplement the classical pipeline. They do not change classical c
 - Generate the production CSP API origin from `VITE_API_URL` instead of a hard-coded Render hostname. Normalize trailing slashes in API requests and reject invalid CSP URL schemes during the build.
 - Pin the CPU ML runtime separately from training dependencies; resolve it together with the base runtime to preserve the NumPy 1.26 constraint.
 - Follow-up verification: all 43 backend tests passed; the frontend CSP regression test, changed Python lint checks, and production build passed. The generated HTML allowed a custom API origin. A Windows/Python 3.11 pip dry run resolved the base and ML requirements together successfully. This checkout has no downloaded checkpoints, so the earlier real-model audit above was not repeated. Render/Linux installation, resource sizing, database persistence, production browser flows, and model accuracy remain release checks.
+
+## Configuration review corrections
+
+- Development ignores stale production API settings. Production builds reject query strings, fragments, whitespace, backslashes, and ambiguous URL schemes that would break API path concatenation or CSP matching.
+- `.gitattributes` enforces LF for Bash scripts. Setup supports an explicit `BLOOM_PYTHON` interpreter, rejects unsupported Python versions before installation, checks installed dependency consistency using pip or uv, and verifies native image/ML imports before downloading checkpoints.
+- Environment examples now document stable token secrets and database persistence; the unsupported upload-size environment setting was removed.
+- Rechecked all 43 backend tests, the expanded frontend configuration regression test, production build, and Bash syntax successfully. A Docker daemon is unavailable locally; a complete Linux build and real checkpoint inference remain unverified in this follow-up.

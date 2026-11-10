@@ -7,7 +7,7 @@ const makeCsp = (apiOrigin) =>
   "font-src https://fonts.gstatic.com; img-src 'self' data:; " +
   `connect-src 'self'${apiOrigin ? ` ${apiOrigin}` : ""};`;
 
-/** @type {import('vite').Plugin} */
+/** @returns {import('vite').Plugin} */
 const cspPlugin = (apiOrigin) => ({
   name: "inject-csp",
   apply: "build",
@@ -19,17 +19,24 @@ const cspPlugin = (apiOrigin) => ({
   },
 });
 
-export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), "");
-  const apiUrl = env.VITE_API_URL?.trim() || "";
+export default defineConfig(({ mode, command }) => {
+  const env = loadEnv(mode, process.cwd(), "VITE_");
+  // Development always uses the local proxy, including with stale hosted settings.
+  const apiUrl = command === "serve" ? "" : env.VITE_API_URL?.trim() || "";
   let apiOrigin = "";
   if (apiUrl.startsWith("//")) {
     throw new Error("VITE_API_URL must use an explicit HTTP(S) scheme or a relative path.");
+  }
+  if (/[?#\\\s]/.test(apiUrl)) {
+    throw new Error("VITE_API_URL must not contain a query, fragment, backslash, or whitespace.");
   }
   if (apiUrl && !apiUrl.startsWith("/")) {
     const parsed = new URL(apiUrl);
     if (!["https:", "http:"].includes(parsed.protocol) || parsed.username || parsed.password) {
       throw new Error("VITE_API_URL must be an HTTP(S) URL without credentials.");
+    }
+    if (!/^https?:\/\//i.test(apiUrl)) {
+      throw new Error("VITE_API_URL must use an explicit HTTP(S) scheme or a relative path.");
     }
     apiOrigin = parsed.origin;
   }

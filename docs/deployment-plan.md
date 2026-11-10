@@ -6,6 +6,7 @@ This is a plan for a two-service Render deployment. It is not a deployment recor
 
 - Keep model weights and local account data out of Git. The two checkpoints are downloaded from `mufasabrownie/glowlytics-skin-models` by `setup_ml.sh`.
 - Keep `setup_ml.sh` in the backend build command. It installs the base runtime and pinned CPU ML packages from `backend/requirements-ml.txt` in one resolver invocation. Verify both checkpoint loads on Python 3.11 and confirm the build fits the selected service's memory and disk limits.
+- The setup script requires Python 3.11, checks dependency consistency, and imports the image/ML runtimes before downloading checkpoints. Set `BLOOM_PYTHON` to an interpreter path to override automatic selection. Shell scripts are checked out with LF line endings.
 - Verify `npm ci && npm run build` in `frontend/` and `python -m pytest tests/ -v --tb=short` in `backend/` before deployment.
 - Push the verified source and this plan to GitHub. Keep `.env`, `backend/data/`, and downloaded model files untracked.
 

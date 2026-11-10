@@ -19,6 +19,14 @@ test("production CSP follows the configured API origin", () => {
     assert.throws(() => config({ mode: "production" }), /HTTP\(S\)/);
     process.env.VITE_API_URL = "//api.example.com";
     assert.throws(() => config({ mode: "production" }), /explicit HTTP\(S\)/);
+    for (const value of ["https://api.example.com/?key=value", "/proxy#fragment", "https://api.example.com/a b"]) {
+      process.env.VITE_API_URL = value;
+      assert.throws(() => config({ mode: "production" }), /query, fragment/);
+    }
+    process.env.VITE_API_URL = "https:api.example.com";
+    assert.throws(() => config({ mode: "production" }), /explicit HTTP\(S\)/);
+    process.env.VITE_API_URL = "stale-invalid-host";
+    assert.doesNotThrow(() => config({ mode: "development", command: "serve" }));
   } finally {
     if (previous === undefined) delete process.env.VITE_API_URL;
     else process.env.VITE_API_URL = previous;

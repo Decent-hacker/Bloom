@@ -52,7 +52,7 @@ Open the URL printed by the script (normally `http://localhost:8080`). If an old
 
 For manual development, install `backend/requirements-dev.txt`, run `uvicorn main:app --reload` inside `backend/`, then run `npm ci` and `npm run dev` inside `frontend/`. Vite proxies `/api` to the local backend.
 
-Run backend tests from `backend/` with `python -m pytest tests -q`. Production Python dependencies are pinned in `requirements.txt`; the development file adds pytest, HTTPX, and Ruff. A model checkpoint is optional for the default scan.
+Run backend tests from `backend/` with `python -m pytest tests -q`. Base production Python dependencies are pinned in `backend/requirements.txt`; `backend/requirements-ml.txt` pins the CPU inference runtime. The development file adds pytest, HTTPX, and Ruff. On Python 3.11, run `bash setup_ml.sh` from the repository root to install the base and ML runtime together and download both checkpoints. Classical scans can run without checkpoints, but their ML results will be unavailable. See [the deployment plan](docs/deployment-plan.md) for production configuration and release checks.
 
 ## API and limitations
 
