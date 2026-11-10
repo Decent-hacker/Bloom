@@ -140,18 +140,22 @@ def test_size_limit_rejected(monkeypatch):
 
 
 def test_cors_allowed_and_denied_origins():
-    allowed = client.get("/api/health", headers={"Origin": "http://localhost:5173"})
-    assert allowed.headers.get("access-control-allow-origin") == "http://localhost:5173"
+    origin = main.ALLOWED_ORIGINS[0]
+    allowed = client.get("/api/health", headers={"Origin": origin})
+    assert allowed.headers.get("access-control-allow-origin") == origin
     denied = client.get("/api/health", headers={"Origin": "https://evil.example"})
     assert denied.headers.get("access-control-allow-origin") is None
 
 
 def test_cors_preflight_allows_authenticated_history_requests():
+    origin = main.ALLOWED_ORIGINS[0]
     for method, path in (("GET", "/api/history"), ("DELETE", "/api/history/1")):
         response = client.options(path, headers={
-            "Origin": "http://localhost:5173",
+            "Origin": origin,
             "Access-Control-Request-Method": method,
             "Access-Control-Request-Headers": "authorization,content-type",
         })
         assert response.status_code == 200
-        assert response.headers["access-control-allow-origin"] == "http://localhost:5173"
+        assert response.headers["access-control-allow-origin"] == origin
+        assert method in response.headers["access-control-allow-methods"]
+        assert "authorization" in response.headers["access-control-allow-headers"].lower()

@@ -35,7 +35,15 @@ The ML results supplement the classical pipeline. They do not change classical c
 
 ## Remaining deployment checks
 
-- Run the exact Render build and start commands on the chosen service size. The local audit does not prove that PyTorch, MediaPipe, and both checkpoints fit the cloud memory and disk limits. The ML packages are currently installed by `setup_ml.sh`, rather than pinned in `backend/requirements.txt`.
+- Run the exact Render build and start commands on the chosen service size. The local audit does not prove that PyTorch, MediaPipe, and both checkpoints fit the cloud memory and disk limits. `setup_ml.sh` now installs pinned CPU ML packages from `backend/requirements-ml.txt` together with the base requirements.
 - Configure a persistent SQLite disk or a durable database, `AUTH_SECRET`, `ALLOWED_ORIGINS`, and the frontend's build-time `VITE_API_URL` before opening the site to users.
 - Verify the full production browser flow, including password toggle, cross-origin login/history, valid face upload, and ML display. Test distinct left and right side images for guided capture.
 - These tests verify execution and wiring, not clinical accuracy or generalization across skin tones, lighting, cameras, and acne types.
+
+## Follow-up source readiness fixes
+
+- The pasted CORS, timing, health, and per-angle ML changes were already present in commit `3a75d64`.
+- Load `.env` before importing authentication/configuration modules so configured database paths and token secrets apply on first import.
+- Generate the production CSP API origin from `VITE_API_URL` instead of a hard-coded Render hostname. Normalize trailing slashes in API requests and reject invalid CSP URL schemes during the build.
+- Pin the CPU ML runtime separately from training dependencies; resolve it together with the base runtime to preserve the NumPy 1.26 constraint.
+- Follow-up verification: all 43 backend tests passed; the frontend CSP regression test, changed Python lint checks, and production build passed. The generated HTML allowed a custom API origin. A Windows/Python 3.11 pip dry run resolved the base and ML requirements together successfully. This checkout has no downloaded checkpoints, so the earlier real-model audit above was not repeated. Render/Linux installation, resource sizing, database persistence, production browser flows, and model accuracy remain release checks.

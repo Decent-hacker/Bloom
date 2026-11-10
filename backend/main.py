@@ -1,4 +1,5 @@
 """Bloom API: FastAPI routes + upload validation. Business logic lives in pipeline.py."""
+# ruff: noqa: E402 -- environment must be initialized before application imports.
 import logging
 import os
 
@@ -7,6 +8,10 @@ os.environ.setdefault("GLOG_minloglevel", "2")
 os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
 
 from dotenv import load_dotenv
+
+# Load configuration before auth_store and src.config read environment variables.
+load_dotenv()
+
 from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Query, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -24,8 +29,6 @@ from src import enhancement, preprocessing, skin_segmentation
 from src.config import MAX_IMAGE_SIZE_MB, RATE_LIMIT
 from src.errors import FaceLandmarkError, InvalidImageError
 from src.image_validation import inspect_image
-
-load_dotenv()
 
 logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO").upper())
 logger = logging.getLogger("bloom")

@@ -1,7 +1,7 @@
 const REQUEST_TIMEOUT_MS = 60000;
 // Always use Vite's /api proxy in development, even if a stale local .env
 // contains an API URL. Hosted builds can set VITE_API_URL explicitly.
-const API_BASE = import.meta.env.DEV ? "" : (import.meta.env.VITE_API_URL || "");
+const API_BASE = import.meta.env.DEV ? "" : (import.meta.env.VITE_API_URL || "").trim().replace(/\/+$/, "");
 
 const authHeaders = () => {
   const token = sessionStorage.getItem("bloom_session_token");

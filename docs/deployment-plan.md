@@ -5,14 +5,14 @@ This is a plan for a two-service Render deployment. It is not a deployment recor
 ## 1. Prepare the repository
 
 - Keep model weights and local account data out of Git. The two checkpoints are downloaded from `mufasabrownie/glowlytics-skin-models` by `setup_ml.sh`.
-- Add the ML runtime packages (`timm`, `torch`, `torchvision`, `ultralytics`, `huggingface_hub`) to the backend's production dependency definition, or keep `setup_ml.sh` in the backend build command. Confirm compatible versions and that the build fits the selected service's memory and disk limits.
+- Keep `setup_ml.sh` in the backend build command. It installs the base runtime and pinned CPU ML packages from `backend/requirements-ml.txt` in one resolver invocation. Verify both checkpoint loads on Python 3.11 and confirm the build fits the selected service's memory and disk limits.
 - Verify `npm ci && npm run build` in `frontend/` and `python -m pytest tests/ -v --tb=short` in `backend/` before deployment.
 - Push the verified source and this plan to GitHub. Keep `.env`, `backend/data/`, and downloaded model files untracked.
 
 ## 2. Create the API service
 
 - Create a Render Python web service from this GitHub repository, using the repository root as the service root.
-- Set build command to `pip install -r backend/requirements.txt && bash setup_ml.sh`. The script downloads both model files into `backend/models/` during the build.
+- Set build command to `bash setup_ml.sh`. The script installs base and ML requirements and downloads both model files into `backend/models/` during the build.
 - Set start command to `cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT`.
 - Set `PYTHON_VERSION` to a supported Python 3.11 release. Set `AUTH_SECRET` to a long random secret and `ALLOWED_ORIGINS` to the exact frontend HTTPS origin. Set the health check path to `/api/health`.
 - Decide how to preserve accounts and scan history before inviting users. With the current SQLite store, attach a persistent disk at `/var/data` and set `BLOOM_DB_PATH=/var/data/bloom.db`. Render's default filesystem is ephemeral; persistent disks require a paid service and limit scaling to one instance. An external database would require an application change.
@@ -22,6 +22,7 @@ This is a plan for a two-service Render deployment. It is not a deployment recor
 
 - Create a Render static site from the same GitHub repository with root directory `frontend/`, build command `npm ci && npm run build`, and publish directory `dist`.
 - Set the build-time variable `VITE_API_URL` to the API service's HTTPS URL. Set the API's `ALLOWED_ORIGINS` to the final static-site URL, then redeploy both services as needed.
+- The frontend's production Content Security Policy derives `connect-src` from `VITE_API_URL`; changing the API URL requires a new frontend build. An unset value uses same-origin requests and requires an API reverse proxy.
 - Verify sign-up, sign-in, password visibility toggle, reset flow, image upload, and the ML results panel in a production build.
 
 ## 4. Release checks

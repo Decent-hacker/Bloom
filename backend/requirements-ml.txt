@@ -1,0 +1,9 @@
+# CPU inference only; install alongside backend/requirements.txt.
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.13.0+cpu
+torchvision==0.28.0+cpu
+timm==1.0.22
+ultralytics==8.4.192
+# Avoid a second OpenCV wheel pulling NumPy 2 into the MediaPipe/NumPy 1 runtime.
+opencv-python==4.11.0.86
+huggingface_hub==0.36.0
