@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Camera, Leaf, ShieldCheck } from "lucide-react";
+import { Camera, Eye, EyeOff, Leaf, ShieldCheck } from "lucide-react";
 import { getRecoveryQuestion, resetPassword } from "../api.js";
 
 const QUESTIONS = [
@@ -13,6 +13,7 @@ function AuthScreen({ onAuthenticate }) {
   const [form, setForm] = useState({ email: "", password: "", security_question: QUESTIONS[0], security_answer: "" });
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const update = (event) => setForm((previous) => ({ ...previous, [event.target.name]: event.target.value }));
   const submit = async (event) => {
@@ -59,7 +60,7 @@ function AuthScreen({ onAuthenticate }) {
           <p className="muted">{mode === "signin" ? "Sign in to view only your own scan history." : mode === "signup" ? "Use an email, a strong password and a recovery answer." : "Your security question confirms it is your account."}</p>
           <form onSubmit={submit} className="auth-form">
             <label>Email address<input name="email" type="email" autoComplete="email" required value={form.email} onChange={update} /></label>
-            {mode !== "recovery-email" && <label>{mode === "recovery-reset" ? "New password" : "Password"}<input name="password" type="password" autoComplete={mode === "signin" ? "current-password" : "new-password"} minLength={mode !== "signin" ? 10 : undefined} required value={form.password} onChange={update} /></label>}
+            {mode !== "recovery-email" && <div className="grid gap-[.42rem]"><label htmlFor="auth-password">{mode === "recovery-reset" ? "New password" : "Password"}</label><div className="relative"><input id="auth-password" className="w-full !pr-12" name="password" type={showPassword ? "text" : "password"} autoComplete={mode === "signin" ? "current-password" : "new-password"} minLength={mode !== "signin" ? 10 : undefined} required value={form.password} onChange={update} /><button type="button" className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-[var(--sage)] hover:text-[var(--ink)]" onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword}>{showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}</button></div></div>}
             {mode === "signup" && <>
               <label>Security question<select name="security_question" value={form.security_question} onChange={update}>{QUESTIONS.map((question) => <option key={question}>{question}</option>)}</select></label>
               <label>Answer<input name="security_answer" type="text" autoComplete="off" required value={form.security_answer} onChange={update} /></label>

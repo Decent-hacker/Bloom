@@ -117,6 +117,14 @@ def run(image_bytes: bytes) -> dict:
     )
     images["imperfection_heatmap"] = visualization.encode_image_to_base64(stages["imperfection_map"]["heatmap"])
     images["imperfection_overlay"] = visualization.encode_image_to_base64(stages["imperfection_map"]["overlay"])
+    from PIL import Image as PILImage
+    from ml_inference import run_ml_analysis
+
+    try:
+        pil_img = PILImage.fromarray(stages["enhanced"])
+        ml_result = run_ml_analysis(pil_img)
+    except Exception:
+        ml_result = {"available": False}
     return {
         "quality": stages["quality"],
         "concerns": stages["concerns"],
@@ -125,6 +133,7 @@ def run(image_bytes: bytes) -> dict:
         "stage_times_sec": stages["stage_times_sec"],
         "images": images,
         "detection": stages["detection"],
+        "ml": ml_result,
         "mediapipe_mode": stages["mediapipe_mode"],
         "processing_time_sec": stages["processing_time_sec"],
     }

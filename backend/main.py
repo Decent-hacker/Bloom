@@ -155,8 +155,18 @@ def build_success(result: dict) -> dict:
         "imperfection_map": result.get("imperfection_map"),
         "stage_times_sec": result.get("stage_times_sec", {}),
     }
-    if "ml" in result:
-        response["ml"] = result["ml"]
+    ml_result = result.get("ml", {})
+    response["ml"] = {
+        "signals": ml_result.get("signals", {}),
+        "acne_detections": ml_result.get("acne", {}),
+        "available": ml_result.get("available", False),
+        "disclaimer": ml_result.get("disclaimer", ""),
+    }
+    if "detections" in ml_result:
+        response["ml"].update({
+            "detections": ml_result["detections"],
+            "scope": ml_result.get("scope", "acne_lesion_detection"),
+        })
     return response
 
 
@@ -318,8 +328,8 @@ async def analyse(
     return JSONResponse(status_code=200, content=build_success({
         **stages,
         "ml": {
+            **stages.get("ml", {}),
             "detections": ml_detections,
-            "available": ml["available"],
             "scope": ml["scope"],
         },
     }))

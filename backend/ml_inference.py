@@ -8,9 +8,16 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from threading import Lock
 from typing import Any
 
 import numpy as np
+try:
+    import torch
+    import torch.nn as nn
+except Exception as _torch_error:
+    torch = None
+    nn = None
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -131,7 +138,144 @@ def detect(image: np.ndarray) -> list[dict]:
     return detections
 
 
-# Auto-load on module import. Missing optional ML dependencies or a checkpoint
-# leave the API in honest classical-only mode.
-_ensure_torch()
-_load_model()
+SIGNALS_PATH = Path(__file__).resolve().parent / "models" / "skin_signals_best.pt"
+ACNE_PATH = Path(__file__).resolve().parent / "models" / "acne_detector_best.pt"
+SIGNAL_NAMES = ("structure", "hydration", "sun_damage", "elasticity")
+DISCLAIMER = "ML outputs are research/educational estimates. Not a medical diagnosis."
+
+_signals_model: Any | None = None
+_acne_detector: Any | None = None
+_signals_lock = Lock()
+_acne_lock = Lock()
+
+
+class SkinSignalsModel(nn.Module if nn is not None else object):
+    def __init__(self):
+        if nn is None:
+            raise ImportError("PyTorch is required for skin signal inference")
+        super().__init__()
+        import timm
+
+        self.backbone = timm.create_model("efficientnet_b0", pretrained=False, num_classes=0)
+        self.shared = nn.Sequential(
+            nn.Linear(1280, 512), nn.ReLU(),
+            nn.Dropout(0.3),
+            nn.Linear(512, 256), nn.ReLU(),
+        )
+        self.heads = nn.ModuleList([
+            nn.Sequential(nn.Linear(256, 64), nn.ReLU(), nn.Linear(64, 1), nn.Sigmoid())
+            for _ in range(4)
+        ])
+
+    def forward(self, x):
+        features = self.backbone(x)
+        shared = self.shared(features)
+        return torch.cat([head(shared) for head in self.heads], dim=1)
+
+
+def _get_signals_model():
+    global _signals_model
+    if _signals_model is None:
+        with _signals_lock:
+            if _signals_model is None:
+                if not SIGNALS_PATH.is_file():
+                    raise FileNotFoundError(
+                        f"skin_signals_best.pt not found at {SIGNALS_PATH}. Run setup_ml.sh first."
+                    )
+                model = SkinSignalsModel()
+                state = torch.load(str(SIGNALS_PATH), map_location="cpu", weights_only=False)
+                if isinstance(state, dict) and "model_state_dict" in state:
+                    state = state["model_state_dict"]
+                elif isinstance(state, dict) and "state_dict" in state:
+                    state = state["state_dict"]
+                compatibility = model.load_state_dict(state, strict=False)
+                if compatibility.missing_keys or compatibility.unexpected_keys:
+                    raise ValueError(
+                        "Skin signal checkpoint does not match model architecture: "
+                        f"missing={compatibility.missing_keys}, unexpected={compatibility.unexpected_keys}"
+                    )
+                model.eval()
+                _signals_model = model
+    return _signals_model
+
+
+def _get_acne_detector():
+    global _acne_detector
+    if _acne_detector is None:
+        with _acne_lock:
+            if _acne_detector is None:
+                if not ACNE_PATH.is_file():
+                    raise FileNotFoundError(f"Missing model: {ACNE_PATH}")
+                from ultralytics import YOLO
+                _acne_detector = YOLO(str(ACNE_PATH))
+    return _acne_detector
+
+
+def run_skin_signals(img_pil) -> dict:
+    """Return four normalized skin signal estimates from the PyTorch model."""
+    try:
+        import torchvision.transforms as T
+
+        transform = T.Compose([
+            T.Resize((256, 256)),
+            T.CenterCrop(224),
+            T.ToTensor(),
+            T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ])
+        model = _get_signals_model()
+        x = transform(img_pil.convert("RGB")).unsqueeze(0)
+        with torch.no_grad():
+            scores = model(x)[0].numpy()
+        if scores.size != len(SIGNAL_NAMES) or not np.all(np.isfinite(scores)):
+            raise ValueError("Skin signal model returned invalid scores")
+        return {name: round(float(scores[index]), 3)
+                for index, name in enumerate(SIGNAL_NAMES)}
+    except Exception as exc:
+        return {**dict.fromkeys(SIGNAL_NAMES), "error": str(exc)}
+
+
+def run_acne_detection(img_pil) -> dict:
+    """Return acne boxes in original image pixel coordinates."""
+    try:
+        model = _get_acne_detector()
+        results = model.predict(np.asarray(img_pil.convert("RGB")), conf=0.35, verbose=False)
+        detections = []
+        for result in results:
+            for box in result.boxes:
+                class_id = int(box.cls[0])
+                names = result.names
+                class_name = names[class_id]
+                detections.append({
+                    "class": str(class_name),
+                    "confidence": float(box.conf[0]),
+                    "bbox": [float(value) for value in box.xyxy[0].tolist()],
+                })
+        return {
+            "detections": detections,
+            "count": len(detections),
+            "classes": sorted({item["class"] for item in detections}),
+        }
+    except Exception as exc:
+        return {"detections": [], "count": 0, "classes": [], "error": str(exc)}
+
+
+def run_ml_analysis(img_pil) -> dict:
+    """Run both optional models without interrupting the classical pipeline."""
+    signals = run_skin_signals(img_pil)
+    acne = run_acne_detection(img_pil)
+    return {
+        "signals": signals,
+        "acne": acne,
+        "available": "error" not in signals and "error" not in acne,
+        "disclaimer": DISCLAIMER,
+    }
+
+
+if __name__ == "__main__":
+    from PIL import Image
+    import sys
+
+    if len(sys.argv) != 2:
+        raise SystemExit("usage: python ml_inference.py <image_path>")
+    with Image.open(sys.argv[1]) as image:
+        print(run_ml_analysis(image))
